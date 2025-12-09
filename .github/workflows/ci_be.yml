@@ -1,0 +1,58 @@
+name: Backend CI
+
+on: 
+    push:
+        branches: [ main, dev, ci ]
+        paths:
+            - 'backend/**'
+            - '.github/workflows/ci_be.yml'
+    pull_request:
+        branches: [ main, dev ]
+        paths:
+            - 'backend/**'
+            - '.github/workflows/ci_be.yml'
+
+permissions:
+    contents: read
+    checks: write
+    pull-requests: write
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        defaults:
+            run:
+                working-directory: ./backend
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+            
+        - name: Set up JDK 21
+          uses: actions/setup-java@v4
+          with:
+            java-version: '21'
+            distribution: 'temurin'
+            cache: 'maven'
+
+        - name: Grant execute permission for mvnw
+          run: chmod +x mvnw    
+
+        - name: Build
+          run: ./mvnw clean package -DskipTests
+          env:
+            MAVEN_OPTS: "-Xmx512m"
+
+        - name: Display build info
+          run: |
+            echo "✅ Build completed successfully!"
+            echo "📦 JAR file:"
+            ls -lh target/*.jar
+
+        - name: Upload JAR artifact
+          uses: actions/upload-artifact@v4
+          with:
+            name: backend-application-jar
+            path: backend/target/*.jar
+            retention-days: 7
