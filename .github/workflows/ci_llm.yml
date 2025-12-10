@@ -1,0 +1,58 @@
+name: LLM Service CI
+
+on: 
+    push:
+        branches: [ main, dev, ci ]
+        paths:
+            - 'llm-service/**'
+            - '.github/workflows/ci_llm.yml'
+    pull_request:
+        branches: [ main, dev ]
+        paths:
+            - 'llm-service/**'
+            - '.github/workflows/ci_llm.yml'
+
+permissions:
+    contents: read
+    checks: write
+    pull-requests: write
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        defaults:
+            run:
+                working-directory: ./llm-service
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+            
+        - name: Set up Python 3.12
+          uses: actions/setup-python@v5
+          with:
+            python-version: '3.12'
+            cache: 'pip'
+            cache-dependency-path: llm-service/requirements.txt
+
+        - name: Install dependencies
+          run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+
+        - name: Test API startup
+          run: |
+            echo "Starting FastAPI application..."
+            timeout 10s uvicorn app.main:app --host 0.0.0.0 --port 8001 &
+            sleep 5
+            curl -f http://localhost:8001/ || exit 1
+            echo "✅ API responds successfully!"
+
+        - name: Display build info
+          run: |
+            echo "✅ LLM Service build completed successfully!"
+            echo "🐍 Python version: $(python --version)"
+            echo "📦 Key packages:"
+            pip list | grep -E "fastapi|uvicorn" || pip list
+
