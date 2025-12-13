@@ -1,6 +1,7 @@
 package com.gymtracker.repository;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -34,6 +35,13 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
      * @return Optional of WorkoutLog
      */
     Optional<WorkoutLog> findByUserIdAndLogDate(Long userId, LocalDate logDate);
+
+    /**
+     * Find all workout logs for a specific user ordered by date descending
+     * @param userId User ID
+     * @return List of WorkoutLog
+     */
+    List<WorkoutLog> findByUserIdOrderByLogDateDesc(Long userId);
     
     /**
      * Find workout logs by user and date range

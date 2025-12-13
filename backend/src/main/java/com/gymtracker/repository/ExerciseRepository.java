@@ -48,6 +48,13 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
      * @return Page of Exercise
      */
     Page<Exercise> findByIsCustomTrueAndCreatedByUserId(Long userId, Pageable pageable);
+
+    /**
+     * Find exercises created by system (null) or by specific user
+     * @param userId User ID
+     * @return List of Exercise
+     */
+    List<Exercise> findByCreatedByUserIdIsNullOrCreatedByUserId(Long userId);
     
     /**
      * Search exercises by name or muscle group
