@@ -1,46 +1,22 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import os
+from app.core.config import settings
+from app.core.security import setup_cors
+from app.api.routes_health import router as health_router
+from app.api.routes_chat import router as chat_router
+
 
 # Create FastAPI instance
 app = FastAPI(
-    title="Gym Tracker LLM Service",
-    description="AI/LLM service for workout suggestions, analysis, and knowledge queries",
-    version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    title=settings.APP_NAME,
+    description=settings.DESCRIPTION,
+    version=settings.VERSION,
+    docs_url=settings.DOCS_URL,
+    redoc_url=settings.REDOC_URL,
 )
 
-allowed_origins = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:8080"  # Default for development
-)
+# Setup middleware
+setup_cors(app)
 
-# Parse origins
-origins = [origin.strip() for origin in allowed_origins.split(",") if origin.strip()]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.get("/")
-def root():
-    """Health check endpoint"""
-    return {
-        "service": "Gym Tracker LLM Service",
-        "status": "running",
-        "message": "AI service is ready!"
-    }
-
-@app.get("/health")
-def health_check():
-    """Detailed health check"""
-    return {
-        "status": "healthy",
-        "service": "llm-service",
-        "version": "1.0.0"
-    }
+# Include routers
+app.include_router(health_router)
+app.include_router(chat_router)
