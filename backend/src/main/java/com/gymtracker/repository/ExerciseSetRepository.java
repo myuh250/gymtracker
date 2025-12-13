@@ -93,5 +93,7 @@ public interface ExerciseSetRepository extends JpaRepository<ExerciseSet, Long> 
         @Param("userId") Long userId,
         @Param("exerciseId") Long exerciseId
     );
+
+    void deleteByWorkoutLogId(Long workoutLogId);
 }
 
