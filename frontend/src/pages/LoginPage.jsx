@@ -74,11 +74,13 @@ export default function LoginPage() {
           <Form.Item
             name="password"
             rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
+            
           >
             <Input.Password
               prefix={<LockOutlined />}
               placeholder="Mật khẩu"
               size="large"
+              style={{marginTop: 10}}
             />
           </Form.Item>
 
@@ -89,6 +91,7 @@ export default function LoginPage() {
               block
               size="large"
               loading={loading}
+              style={{marginTop: 10}}
             >
               Đăng nhập
             </Button>
