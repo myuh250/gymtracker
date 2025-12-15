@@ -27,7 +27,7 @@ class ChatRequest(BaseModel):
     )
     conversation_history: Optional[List[ChatMessage]] = Field(
         default=None,
-        max_length=20, 
+        max_length=5, 
         description="Previous messages (max 20 for performance)"
     )
     
@@ -42,3 +42,4 @@ class ChatResponse(BaseModel):
     response: str
     model: str
     usage: Optional[UsageStats] = None
+    session_id: Optional[str] = Field(None, description="Session ID for conversation continuity")
