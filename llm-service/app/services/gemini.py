@@ -45,7 +45,7 @@ class GeminiService:
         # Reraise last exception if all retries fail
         reraise=True
     )
-    async def _call_gemini_with_retry(self, prompt: str) -> any:
+    async def _call_gemini_with_retry(self, prompt: str) -> Any:
         """
         Internal method to call Gemini API with retry logic
         
@@ -119,7 +119,7 @@ class GeminiService:
         
         if request.conversation_history:
             prompt_parts.append("\nConversation History:")
-            for msg in request.conversation_history[-5:]:
+            for msg in request.conversation_history[-20:]:
                 role = msg.role
                 content = msg.content
                 prompt_parts.append(f"{role}: {content}")

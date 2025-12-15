@@ -49,6 +49,38 @@ class Settings(BaseSettings):
         extra="ignore"
     )
     
+    # REDIS settings
+    REDIS_HOST: str = Field(
+        default="localhost",
+        description="Redis host"
+    )
+    REDIS_PORT: int = Field(
+        default=6379,
+        description="Redis port"
+    )
+    REDIS_DB: int = Field(
+        default=0,
+        description="Redis database number (0-15)"
+    )
+    REDIS_PASSWORD: Optional[str] = Field(
+        default=None,
+        description="Redis password (if auth enabled)"
+    )
+    REDIS_MAX_CONNECTIONS: int = Field(
+        default=10,
+        description="Maximum Redis pool connections"
+    )
+    
+    # Session settings
+    SESSION_TTL_SECONDS: int = Field(
+        default=7200,  
+        description="Session expiry time in seconds"
+    )
+    MAX_MESSAGES_PER_SESSION: int = Field(
+        default=50,
+        description="Maximum messages to keep per session"
+    )
+    
     @computed_field
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:
