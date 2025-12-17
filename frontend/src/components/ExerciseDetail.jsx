@@ -1,10 +1,56 @@
-import React from "react";
-import { Card, Typography, Empty, Tag, Image, Descriptions } from "antd";
-import { ThunderboltOutlined } from "@ant-design/icons";
+import React, { useEffect, useState, useRef } from "react";
+import { Typography, Empty, Tag, Image, Space } from "antd";
+import { FireFilled } from "@ant-design/icons";
 
-const { Title, Paragraph } = Typography;
+const { Title, Text, Paragraph } = Typography;
+
+const getMuscleColor = (muscle) => {
+  const colors = {
+    Chest: "volcano",
+    Back: "geekblue",
+    Legs: "red",
+    Shoulders: "gold",
+    Abs: "purple",
+    Cardio: "green",
+  };
+  return colors[muscle] || "blue";
+};
 
 export default function ExerciseDetail({ exercise }) {
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isVideo, setIsVideo] = useState(false);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (!exercise) {
+      setPreviewUrl(null);
+      setIsVideo(false);
+      return;
+    }
+
+    if (exercise.mediaFile && typeof exercise.mediaFile === "object") {
+      const file = exercise.mediaFile;
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      // Check MIME type để biết là video hay ảnh
+      setIsVideo(file.type?.startsWith("video/") || /video/i.test(file.type));
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+
+    if (exercise.mediaUrl) {
+      setPreviewUrl(exercise.mediaUrl);
+      const isVid =
+        /\.(mp4|webm|ogg|mov)(\?|$)/i.test(exercise.mediaUrl) ||
+        /video/i.test(exercise.mediaUrl);
+      setIsVideo(isVid);
+    } else {
+      setPreviewUrl(null);
+      setIsVideo(false);
+    }
+  }, [exercise]);
+
   if (!exercise) {
     return (
       <div
@@ -13,90 +59,130 @@ export default function ExerciseDetail({ exercise }) {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#f5f5f5",
+          background: "#fff",
         }}
       >
-        <Empty description="Chọn một bài tập để xem chi tiết" />
+        <Empty
+          description={
+            <Text type="secondary">Chọn một bài tập để xem chi tiết</Text>
+          }
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        />
       </div>
     );
   }
+
+  const muscleColor = getMuscleColor(exercise.muscleGroup);
 
   return (
     <div
       style={{
         flex: 1,
-        padding: 24,
+        height: "100%",
         overflowY: "auto",
-        backgroundColor: "#f0f2f5",
+        background: "#fff",
+        padding: "24px 32px",
       }}
     >
-      <Card bordered={false} style={{ height: "100%", borderRadius: 8 }}>
-        {/* Header */}
-        <div
-          style={{ display: "flex", alignItems: "center", marginBottom: 24 }}
-        >
-          <ThunderboltOutlined
-            style={{ fontSize: 32, color: "#1890ff", marginRight: 16 }}
-          />
-          <div>
-            <Title level={2} style={{ margin: 0 }}>
-              {exercise.name}
-            </Title>
-            <Tag color="blue" style={{ marginTop: 8 }}>
-              {exercise.muscleGroup}
-            </Tag>
-          </div>
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+        {/* Header Information */}
+        <div style={{ marginBottom: 24 }}>
+          <Title level={2} style={{ marginBottom: 12, color: "#1e293b" }}>
+            {exercise.name}
+          </Title>
+
+          <Space size="large" style={{ marginBottom: 8 }}>
+            <Space>
+              <Text type="secondary">Nhóm cơ chính:</Text>
+              <Tag color={muscleColor} style={{ margin: 0, fontWeight: 600 }}>
+                {exercise.muscleGroup}
+              </Tag>
+            </Space>
+          </Space>
         </div>
 
-        {/* Media / Video / Image */}
-        {exercise.mediaUrl ? (
-          <div
-            style={{
-              marginBottom: 24,
-              textAlign: "center",
-              background: "#000",
-              borderRadius: 8,
-              overflow: "hidden",
-            }}
-          >
-            {/* Nếu là ảnh thì dùng Image, nếu video thì dùng thẻ video */}
-            <Image
-              src={exercise.mediaUrl}
-              alt={exercise.name}
-              style={{ maxHeight: 400, objectFit: "contain" }}
-              fallback="https://via.placeholder.com/800x400?text=No+Image"
-            />
-          </div>
-        ) : (
-          <div
-            style={{
-              height: 200,
-              background: "#eee",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 8,
-              marginBottom: 24,
-            }}
-          >
-            <Empty
-              description="Chưa có hình ảnh minh họa"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          </div>
-        )}
+        {/* Media */}
+        <div
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "flex-start",
+            marginBottom: 32,
+            maxHeight: 500,
+            minHeight: 200,
+          }}
+        >
+          {previewUrl ? (
+            isVideo ? (
+              <video
+                ref={videoRef}
+                src={previewUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls={false}
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                  maxHeight: 500,
+                  objectFit: "contain",
+                  display: "block",
+                  pointerEvents: "none", // Không cho bấm
+                  borderRadius: 12,
+                }}
+              />
+            ) : (
+              <Image
+                src={previewUrl}
+                alt={exercise.name}
+                style={{
+                  maxWidth: "100%",
+                  height: "auto",
+                  maxHeight: 500,
+                  objectFit: "contain",
+                  display: "block",
+                  borderRadius: 12,
+                }}
+                fallback="https://via.placeholder.com/800x400?text=No+Image"
+                preview={false}
+              />
+            )
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: 32,
+                opacity: 0.5,
+              }}
+            >
+              <FireFilled
+                style={{ fontSize: 48, color: muscleColor, marginBottom: 16 }}
+              />
+              <Text type="secondary">Chưa có hình ảnh minh họa</Text>
+            </div>
+          )}
+        </div>
 
-        {/* Description */}
-        <Descriptions title="Thông tin bài tập" column={1} bordered>
-          <Descriptions.Item label="Mô tả">
-            <Paragraph style={{ margin: 0 }}>
-              {exercise.description ||
-                "Chưa có mô tả chi tiết cho bài tập này."}
-            </Paragraph>
-          </Descriptions.Item>
-          {/* Bạn có thể thêm các trường khác như Độ khó, Dụng cụ... vào đây sau */}
-        </Descriptions>
-      </Card>
+        {/* Description Section */}
+        <div>
+          <Title level={5} style={{ marginBottom: 12 }}>
+            Hướng dẫn kỹ thuật
+          </Title>
+          <Paragraph
+            style={{ fontSize: 15, lineHeight: 1.6, color: "#334155" }}
+          >
+            {exercise.description || (
+              <Text type="secondary" italic>
+                Chưa có mô tả chi tiết cho bài tập này.
+              </Text>
+            )}
+          </Paragraph>
+        </div>
+      </div>
     </div>
   );
 }
