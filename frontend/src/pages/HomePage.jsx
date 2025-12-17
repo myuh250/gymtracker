@@ -1,12 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { Layout, message } from "antd";
-import { useNavigate } from "react-router-dom";
-
-import Sidebar from "../components/Sidebar";
+import React, { useState } from "react";
+import { message } from "antd";
 import ExerciseList from "../components/ExerciseList";
 import ExerciseDetail from "../components/ExerciseDetail";
-
-const { Content } = Layout;
 
 const DATA_MAU = [
   {
@@ -26,21 +21,8 @@ const DATA_MAU = [
 ];
 
 export default function HomePage() {
-  const navigate = useNavigate();
-
-  const [user, setUser] = useState({ fullName: "Guest" });
   const [exercises, setExercises] = useState(DATA_MAU);
-  const [selectedExercise, setSelectedExercise] = useState(null); // Bài tập đang được chọn để xem chi tiết
-
-  // Check Login
-  useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (!userStr) {
-      navigate("/login");
-      return;
-    }
-    setUser(JSON.parse(userStr));
-  }, []);
+  const [selectedExercise, setSelectedExercise] = useState(null);
 
   // add
   const handleAdd = (newItem) => {
@@ -78,24 +60,17 @@ export default function HomePage() {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
-      <Sidebar user={user} />
-      <Layout>
-        <Content
-          style={{ display: "flex", height: "100vh", background: "#fff" }}
-        >
-          <ExerciseDetail exercise={selectedExercise} />
+    <div style={{ display: "flex", height: "100vh", background: "#fff" }}>
+      <ExerciseDetail exercise={selectedExercise} />
 
-          <ExerciseList
-            data={exercises} // Đưa dữ liệu cho hiển thị
-            onSelect={setSelectedExercise} // Hàm chọn bài xem chi tiết
-            selectedId={selectedExercise?.id} // ID đang chọn (để tô màu)
-            onAdd={handleAdd}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        </Content>
-      </Layout>
-    </Layout>
+      <ExerciseList
+        data={exercises} // Đưa dữ liệu cho hiển thị
+        onSelect={setSelectedExercise} // Hàm chọn bài xem chi tiết
+        selectedId={selectedExercise?.id} // ID đang chọn (để tô màu)
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
+    </div>
   );
 }
