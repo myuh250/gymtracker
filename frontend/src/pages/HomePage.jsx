@@ -64,9 +64,9 @@ export default function HomePage() {
       <ExerciseDetail exercise={selectedExercise} />
 
       <ExerciseList
-        data={exercises} // Đưa dữ liệu cho hiển thị
-        onSelect={setSelectedExercise} // Hàm chọn bài xem chi tiết
-        selectedId={selectedExercise?.id} // ID đang chọn (để tô màu)
+        data={exercises}
+        onSelect={setSelectedExercise}
+        selectedId={selectedExercise?.id} // ID đang chọn
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
