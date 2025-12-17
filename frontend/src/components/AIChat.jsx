@@ -9,7 +9,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 
-// CSS Animation (bạn có thể để trong file css riêng hoặc dùng styled-components, ở đây mình dùng thẻ style để demo chạy ngay)
+// CSS Animation và custom scrollbar
 const styles = `
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(20px) scale(0.95); }
@@ -93,7 +93,7 @@ export default function AIChat() {
     <>
       <style>{styles}</style>
 
-      {/* Nút mở chat (Launcher) */}
+      {/* Open chat */}
       {!open && (
         <div style={{ position: "fixed", bottom: 30, right: 30, zIndex: 1000 }}>
           <Tooltip title="Chat với Gym Pro AI" placement="left">
