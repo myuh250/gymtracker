@@ -1,13 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException, Header, Response
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import uuid
+import logging
 
-from app.schemas.llm import ChatRequest, ChatResponse, ChatMessage
+from app.schemas.llm import ChatRequest, ChatResponse, ChatMessage, UsageStats
 from app.schemas.memory import SessionHistory
 from app.services.gemini import GeminiService, get_gemini_service
 from app.services.memory_service import MemoryService, get_memory_service
+from app.tools import ALL_TOOLS
+from app.services.tool_executor import get_tool_executor
+from app.core.config import settings
 
 router = APIRouter(prefix="/api/v1/chat", tags=["chat"])
+logger = logging.getLogger(__name__)
 
 
 @router.post("/", response_model=ChatResponse)
@@ -15,52 +20,84 @@ async def chat(
     request: ChatRequest,
     response_obj: Response,
     session_id: Optional[str] = Header(None, alias="X-Session-ID"),
+    user_id: Optional[int] = Header(None, alias="X-User-ID"),  # Optional for now
     gemini: GeminiService = Depends(get_gemini_service),
     memory: MemoryService = Depends(get_memory_service)
 ) -> ChatResponse:
     """
-    Chat with LLM assistant with conversation memory
+    Intelligent Chat with Dual Memory System
     
-    Flow:
-    1. Get or create session_id
-    2. Save user message to Redis
-    3. Load conversation history from memory
-    4. Call Gemini with history context
-    5. Save assistant response to memory
-    6. Return response with session_id in header + body
+    Architecture:
+        1. Load conversation history (SHORT-TERM: Redis)
+        2. Ask Gemini: need tools? (Decision point)
+        3. Branch:
+           - Tools needed → LONG-TERM path (RAG)
+           - No tools → SHORT-TERM path (Redis only)
+    
+    Two distinct paths:
+        PATH 1 (LONG-TERM): Execute RAG → Synthesize with vector data
+        PATH 2 (SHORT-TERM): Direct response from conversation history
     
     Headers:
-        X-Session-ID: Optional session identifier for conversation continuity
-        
-    Returns:
-        ChatResponse with X-Session-ID header set
-        
-    Raises:
-        HTTPException: If LLM call fails
+        X-Session-ID: Optional session identifier
+        X-User-ID: Optional user ID for personalized RAG
     """
-    # Get or create session_id
     if not session_id:
         session_id = str(uuid.uuid4())
     
     try:
-        # Save user message FIRST (before LLM call for better tracing)
+        # Save user message
         user_msg = ChatMessage(role="user", content=request.message)
         await memory.save_message(session_id, user_msg)
         
         # Load conversation history from Redis
         history = await memory.get_recent_messages(session_id, limit=5)
         
-        # Call Gemini with memory context
-        response = await gemini.chat_with_memory(request, memory_messages=history)
+        # Check if Gemini needs tools (RAG decision point)
+        gemini_response = await gemini.check_needs_tools(
+            request=request,
+            tools=ALL_TOOLS,
+            memory_messages=history
+        )
+        
+        # Extract tool calls if any
+        tool_calls = _extract_tool_calls(gemini_response)
+        
+        if tool_calls:
+            logger.info(f"LONG-TERM MEMORY: Gemini needs {len(tool_calls)} tool(s)")
+            for tc in tool_calls:
+                logger.info(f"   → Tool: {tc['name']} with args: {tc['args']}")
+            
+            # Execute RAG tools
+            tool_executor = get_tool_executor()
+            tool_results = await tool_executor.execute_multiple(
+                tool_calls=tool_calls,
+                user_id=user_id or 1
+            )
+            
+            # Synthesize with RAG + conversation history
+            response = await gemini.chat_with_tool_results(
+                request=request,
+                tool_results=tool_results,
+                memory_messages=history
+            )
+            
+            logger.info("✅ Response: LONG-TERM (RAG) + SHORT-TERM (Redis)")
+            
+        else:
+            response = await gemini.chat_with_memory(
+                request=request,
+                memory_messages=history
+            )
+            
+            logger.info("✅ Response: SHORT-TERM (Redis) only")
         
         # Save assistant response
         ai_msg = ChatMessage(role="assistant", content=response.response)
         await memory.save_message(session_id, ai_msg)
         
-        # Set session_id in response header
+        # Set headers
         response_obj.headers["X-Session-ID"] = session_id
-        
-        # Add session_id to response body (convenient for FE)
         response.session_id = session_id
         
         return response
@@ -68,10 +105,28 @@ async def chat(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"❌ Chat failed: {e}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail=f"Chat failed: {str(e)}"
         )
+
+
+def _extract_tool_calls(gemini_response) -> List[Dict[str, Any]]:
+    """Extract tool calls from Gemini response"""
+    tool_calls = []
+    
+    try:
+        for part in gemini_response.candidates[0].content.parts:
+            if hasattr(part, 'function_call') and part.function_call:
+                tool_calls.append({
+                    'name': part.function_call.name,
+                    'args': dict(part.function_call.args)
+                })
+    except (IndexError, AttributeError):
+        pass
+    
+    return tool_calls
 
 
 @router.get("/history", response_model=SessionHistory)
