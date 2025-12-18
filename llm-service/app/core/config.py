@@ -107,6 +107,16 @@ class Settings(BaseSettings):
         description="Debug mode (enables SQL echo)"
     )
     
+    # Backend API (for RAG data sync)
+    BACKEND_BASE_URL: str = Field(
+        default="http://localhost:8080",
+        description="Backend API base URL"
+    )
+    BACKEND_SERVICE_TOKEN: str = Field(
+        ...,  # Required field
+        description="Service token for backend authentication (get from /api/service/token)"
+    )
+    
     @computed_field
     @property
     def DATABASE_URL(self) -> str:

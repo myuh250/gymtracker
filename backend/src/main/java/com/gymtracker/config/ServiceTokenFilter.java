@@ -91,9 +91,9 @@ public class ServiceTokenFilter extends OncePerRequestFilter {
                 String serviceName = jwtUtils.extractUsername(jwt);
                 List<String> scopes = jwtUtils.extractScopes(jwt);
                 
-                // Convert scopes to Spring Security authorities
+                // Convert scopes to Spring Security authorities with SCOPE_ prefix
                 List<SimpleGrantedAuthority> authorities = scopes.stream()
-                        .map(SimpleGrantedAuthority::new)
+                        .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope))
                         .toList();
                 
                 // Set authentication in SecurityContext
