@@ -81,6 +81,41 @@ class Settings(BaseSettings):
         description="Maximum messages to keep per session"
     )
     
+    # PostgreSQL + pgvector for RAG
+    POSTGRES_HOST: str = Field(
+        default="localhost",
+        description="PostgreSQL host"
+    )
+    POSTGRES_PORT: int = Field(
+        default=5433,
+        description="PostgreSQL port"
+    )
+    POSTGRES_DB: str = Field(
+        default="gym_rag",
+        description="PostgreSQL database name"
+    )
+    POSTGRES_USER: str = Field(
+        default="raguser",
+        description="PostgreSQL user"
+    )
+    POSTGRES_PASSWORD: str = Field(
+        default="ragpassword",
+        description="PostgreSQL password"
+    )
+    DEBUG: bool = Field(
+        default=False,
+        description="Debug mode (enables SQL echo)"
+    )
+    
+    @computed_field
+    @property
+    def DATABASE_URL(self) -> str:
+        """Construct PostgreSQL connection URL for asyncpg"""
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+    
     @computed_field
     @property
     def ALLOWED_ORIGINS(self) -> List[str]:
@@ -93,5 +128,9 @@ class Settings(BaseSettings):
 
 
 # Create a global settings instance
-settings = Settings()
+def get_settings() -> Settings:
+    """Get settings instance (for dependency injection)"""
+    return Settings()
+
+settings = get_settings()
 
