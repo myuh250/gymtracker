@@ -1,36 +1,67 @@
-import React from "react";
-import { Button, Result } from "antd";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { message } from "antd";
+import ExerciseList from "../components/ExerciseList";
+import ExerciseDetail from "../components/ExerciseDetail";
+import {
+  getExercises,
+  addExercise,
+  updateExercise,
+  removeExercise,
+} from "../utils/storage";
 
 export default function HomePage() {
-  const navigate = useNavigate();
+  const [exercises, setExercises] = useState([]);
+  const [selectedExercise, setSelectedExercise] = useState(null);
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    navigate("/login");
+  useEffect(() => {
+    setExercises(getExercises());
+  }, []);
+
+  const handleAdd = (newItem) => {
+    const itemWithId = { ...newItem, id: Date.now() };
+    addExercise(itemWithId);
+    setExercises(getExercises());
+    message.success("Đã thêm thành công!");
+  };
+
+  const handleEdit = async (updatedItem) => {
+    // Convert File to base64 if present
+    if (updatedItem.mediaFile instanceof File) {
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(updatedItem.mediaFile);
+      });
+      updatedItem = { ...updatedItem, mediaUrl: dataUrl, mediaFile: undefined };
+    }
+    updateExercise(updatedItem);
+    setExercises(getExercises());
+    if (selectedExercise?.id === updatedItem.id) {
+      setSelectedExercise(updatedItem);
+    }
+    message.success("Đã sửa thành công!");
+  };
+
+  const handleDelete = (idToDelete) => {
+    removeExercise(idToDelete);
+    setExercises(getExercises());
+    if (selectedExercise?.id === idToDelete) {
+      setSelectedExercise(null);
+    }
+    message.success("Đã xóa bài tập!");
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-      }}
-    >
-      <Result
-        status="success"
-        title="Đăng nhập thành công!"
-        subTitle="Chào mừng bạn đến với hệ thống."
-        extra={[
-          <Button type="primary" key="console">
-            Dashboard
-          </Button>,
-          <Button key="logout" onClick={handleLogout} danger>
-            Đăng xuất
-          </Button>,
-        ]}
+    <div style={{ display: "flex", height: "100vh", background: "#fff" }}>
+      <ExerciseDetail exercise={selectedExercise} />
+
+      <ExerciseList
+        data={exercises}
+        onSelect={setSelectedExercise}
+        selectedId={selectedExercise?.id} // ID đang chọn
+        onAdd={handleAdd}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </div>
   );

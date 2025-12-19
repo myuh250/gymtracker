@@ -14,8 +14,15 @@ export default function LoginPage() {
     message.loading({ content: "Đang kết nối tới Google...", key: "auth" });
 
     setTimeout(() => {
-      const mockOAuthToken = "google_oauth2_token_xyz_123";
-      localStorage.setItem("accessToken", mockOAuthToken);
+      const mockResponse = {
+        token: "google_oauth2_token_xyz_123",
+        email: "gym_pro@gmail.com",
+        fullName: "Google User",
+        role: "USER",
+      };
+
+      localStorage.setItem("mockAccessToken", mockResponse.token);
+      localStorage.setItem("user", JSON.stringify(mockResponse)); // Lưu info user
 
       message.success({ content: "Đăng nhập Google thành công!", key: "auth" });
       setLoading(false);
@@ -28,9 +35,17 @@ export default function LoginPage() {
     setLoading(true);
 
     setTimeout(() => {
-      localStorage.setItem("accessToken", "standard_token_abc_456");
+      const mockResponse = {
+        token: "standard_token_abc_456",
+        email: "user@example.com",
+        fullName: "test",
+        role: "USER",
+      };
 
-      message.success("Đăng nhập thành công!");
+      localStorage.setItem("mockAccessToken", mockResponse.token);
+      localStorage.setItem("user", JSON.stringify(mockResponse));
+
+      message.success(`Xin chào, ${mockResponse.fullName}!`);
       setLoading(false);
       navigate("/");
     }, 1000);
@@ -59,7 +74,7 @@ export default function LoginPage() {
           autoComplete="off"
         >
           <Form.Item
-            name="username"
+            name="email"
             rules={[
               { required: true, message: "Vui lòng nhập tên đăng nhập!" },
             ]}
@@ -79,6 +94,7 @@ export default function LoginPage() {
               prefix={<LockOutlined />}
               placeholder="Mật khẩu"
               size="large"
+              style={{ marginTop: 10 }}
             />
           </Form.Item>
 
@@ -89,6 +105,7 @@ export default function LoginPage() {
               block
               size="large"
               loading={loading}
+              style={{ marginTop: 10 }}
             >
               Đăng nhập
             </Button>
