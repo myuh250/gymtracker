@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   Button,
@@ -11,20 +11,59 @@ import {
   Typography,
   Divider,
 } from "antd";
-import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 
 const { Option } = Select;
 const { Text } = Typography;
 
-export default function WorkoutBuilder({ exercises = [], onCreate }) {
+export default function WorkoutBuilder({
+  exercises = [],
+  onCreate,
+  editingWorkout = null,
+  onCancelEdit,
+}) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(dayjs());
   const [selectedExerciseId, setSelectedExerciseId] = useState(null);
   const [sessionExercises, setSessionExercises] = useState([]);
 
+  // When editingWorkout changes, open modal and populate form
+  useEffect(() => {
+    if (editingWorkout) {
+      setOpen(true);
+      setDate(dayjs(editingWorkout.logDate));
+
+      // Group sets by exerciseId
+      const grouped = {};
+      (editingWorkout.sets || []).forEach((set) => {
+        if (!grouped[set.exerciseId]) {
+          grouped[set.exerciseId] = [];
+        }
+        grouped[set.exerciseId].push(set);
+      });
+
+      // Convert to sessionExercises format
+      const sessExs = Object.entries(grouped).map(([exId, sets]) => {
+        const exercise = exercises.find((e) => e.id === Number(exId));
+        return {
+          id: Date.now() + Math.random(),
+          exerciseId: Number(exId),
+          name: exercise ? exercise.name : `Exercise ${exId}`,
+          sets: sets.map((s) => ({
+            setNumber: s.setNumber,
+            reps: s.reps,
+            weight: s.weight,
+          })),
+        };
+      });
+
+      setSessionExercises(sessExs);
+    }
+  }, [editingWorkout, exercises]);
+
   const addExerciseToSession = () => {
-    if (!selectedExerciseId) return message.warn("Chọn 1 bài tập trước");
+    if (!selectedExerciseId) return message.warning("Vui lòng chọn bài tập");
     const found = exercises.find((e) => e.id === selectedExerciseId);
     if (!found) return message.error("Bài tập không tồn tại");
     setSessionExercises((s) => [
@@ -77,7 +116,10 @@ export default function WorkoutBuilder({ exercises = [], onCreate }) {
     const payload = {
       logDate: date.format("YYYY-MM-DD"),
       notes: "(mock)",
-      isCompleted: false,
+      isCompleted: editingWorkout ? editingWorkout.isCompleted : false,
+      completedExercises: editingWorkout
+        ? editingWorkout.completedExercises
+        : [],
       totalDurationMinutes: 0,
       sets: sessionExercises.flatMap((se) =>
         se.sets.map((st) => ({
@@ -89,25 +131,36 @@ export default function WorkoutBuilder({ exercises = [], onCreate }) {
       ),
     };
     if (onCreate) onCreate(payload);
-    message.success("Buổi tập đã được lập (mock)");
+    message.success(
+      editingWorkout ? "Buổi tập đã được cập nhật" : "Buổi tập đã được lập"
+    );
+    handleClose();
+  };
+
+  const handleClose = () => {
     setOpen(false);
     setSessionExercises([]);
+    setDate(dayjs());
+    if (editingWorkout && onCancelEdit) {
+      onCancelEdit();
+    }
   };
 
   return (
     <>
       <Button
         type="primary"
+        icon={editingWorkout ? <EditOutlined /> : undefined}
         onClick={() => setOpen(true)}
         style={{ marginLeft: 12 }}
       >
-        Tạo buổi tập
+        {editingWorkout ? "Chỉnh sửa buổi tập" : "Tạo buổi tập"}
       </Button>
 
       <Modal
-        title="Tạo buổi tập - Mock"
+        title={editingWorkout ? "Chỉnh sửa buổi tập" : "Tạo buổi tập - Mock"}
         open={open}
-        onCancel={() => setOpen(false)}
+        onCancel={handleClose}
         onOk={handleCreate}
         width={800}
       >
