@@ -1,16 +1,43 @@
-import React, { useMemo } from "react";
-import { Card, Tag, Typography, Collapse, Table, Empty, Space } from "antd";
+import React, { useMemo, useState } from "react";
+import {
+  Card,
+  Tag,
+  Typography,
+  Collapse,
+  Table,
+  Empty,
+  Space,
+  Button,
+  DatePicker,
+  Popconfirm,
+  message,
+} from "antd";
 import {
   CalendarOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import WorkoutExerciseCard from "./WorkoutExerciseCard";
 
 const { Text, Title } = Typography;
-const { Panel } = Collapse;
 
-export default function WorkoutList({ workouts = [], exercises = [] }) {
+export default function WorkoutList({
+  workouts = [],
+  exercises = [],
+  onToggleComplete,
+  onToggleExerciseComplete,
+  onEdit,
+  onDelete,
+}) {
+  const [filterDate, setFilterDate] = useState(null);
+
+  const filteredWorkouts = useMemo(() => {
+    if (!filterDate) return workouts;
+    return workouts.filter((w) => dayjs(w.logDate).isSame(filterDate, "day"));
+  }, [workouts, filterDate]);
   // Helper: Tìm tên bài tập từ ID
   const getExerciseName = (id) => {
     const ex = exercises.find((e) => e.id === id);
@@ -40,99 +67,150 @@ export default function WorkoutList({ workouts = [], exercises = [] }) {
   }
 
   return (
-    <Space direction="vertical" style={{ width: "100%", marginTop: 24 }}>
-      <Title level={4}>
-        <ClockCircleOutlined /> Lịch sử tập luyện
-      </Title>
+    <Space orientation="vertical" style={{ width: "100%", marginTop: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Title level={4} style={{ margin: 0 }}>
+          <ClockCircleOutlined /> Lịch sử tập luyện
+        </Title>
+        <Space>
+          <DatePicker
+            placeholder="Lọc theo ngày"
+            value={filterDate}
+            onChange={setFilterDate}
+            format="DD/MM/YYYY"
+            allowClear
+          />
+        </Space>
+      </div>
 
-      <Collapse defaultActiveKey={[0]} ghost>
-        {workouts.map((workout, index) => {
-          const groupedExercises = groupSetsByExercise(workout.sets);
+      <Collapse
+        defaultActiveKey={[0]}
+        ghost
+        items={filteredWorkouts.map((workout, index) => {
+          const groupedExercises = groupSetsByExercise(workout.sets || []);
           const exerciseIds = Object.keys(groupedExercises);
-          const totalSets = workout.sets.length;
+          const totalSets = (workout.sets || []).length;
 
-          return (
-            <Panel
-              key={index}
-              header={
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    width: "100%",
-                    paddingRight: 12,
-                  }}
-                >
-                  <Space>
-                    <CalendarOutlined style={{ color: "#1890ff" }} />
-                    <Text strong>
-                      {dayjs(workout.logDate).format("DD/MM/YYYY")}
-                    </Text>
-                    <Tag color={workout.isCompleted ? "green" : "orange"}>
-                      {workout.isCompleted ? "Đã xong" : "Chưa xong"}
-                    </Tag>
-                  </Space>
+          return {
+            key: index,
+            label: (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  width: "100%",
+                  paddingRight: 12,
+                  alignItems: "center",
+                }}
+              >
+                <Space>
+                  <CalendarOutlined style={{ color: "#1890ff" }} />
+                  <Text strong>
+                    {dayjs(workout.logDate).format("DD/MM/YYYY")}
+                  </Text>
+                  <Button
+                    type="primary"
+                    size="small"
+                    danger={!workout.isCompleted}
+                    icon={workout.isCompleted ? <CheckCircleOutlined /> : null}
+                    style={{
+                      background: workout.isCompleted ? undefined : "#fa8c16",
+                      borderColor: workout.isCompleted ? undefined : "#fa8c16",
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onToggleComplete) {
+                        onToggleComplete(workout.id);
+                        message.success(
+                          workout.isCompleted
+                            ? "Đã đánh dấu chưa hoàn thành"
+                            : "Đã hoàn thành buổi tập!"
+                        );
+                      }
+                    }}
+                  >
+                    {workout.isCompleted ? "Hoàn thành" : "Chưa xong"}
+                  </Button>
+                </Space>
+                <Space>
                   <Text type="secondary">
                     {exerciseIds.length} Bài tập • {totalSets} Sets
                   </Text>
-                </div>
-              }
-              style={{
-                background: "#fff",
-                borderRadius: 8,
-                marginBottom: 12,
-                border: "1px solid #f0f0f0",
-              }}
-            >
+                  {onEdit && (
+                    <Button
+                      type="text"
+                      size="small"
+                      icon={<EditOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(workout);
+                      }}
+                    />
+                  )}
+                  {onDelete && (
+                    <Popconfirm
+                      title="Xóa buổi tập?"
+                      description="Bạn có chắc chắn muốn xóa buổi tập này?"
+                      onConfirm={(e) => {
+                        e?.stopPropagation();
+                        onDelete(workout.id);
+                      }}
+                      okText="Xóa"
+                      cancelText="Hủy"
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Popconfirm>
+                  )}
+                </Space>
+              </div>
+            ),
+            style: {
+              background: "#fff",
+              borderRadius: 8,
+              marginBottom: 12,
+              border: "1px solid #f0f0f0",
+            },
+            children: (
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 16 }}
               >
                 {exerciseIds.map((exId) => {
                   const sets = groupedExercises[exId];
                   const exerciseName = getExerciseName(Number(exId));
+                  const completedExercises = workout.completedExercises || [];
+                  const isExerciseCompleted = completedExercises.includes(
+                    Number(exId)
+                  );
 
                   return (
-                    <Card
+                    <WorkoutExerciseCard
                       key={exId}
-                      size="small"
-                      title={exerciseName}
-                      type="inner"
-                      bodyStyle={{ padding: 0 }}
-                    >
-                      <Table
-                        dataSource={sets}
-                        rowKey="setNumber"
-                        pagination={false}
-                        size="small"
-                        columns={[
-                          {
-                            title: "Set",
-                            dataIndex: "setNumber",
-                            width: 60,
-                            align: "center",
-                            render: (text) => <Tag>{text}</Tag>,
-                          },
-                          {
-                            title: "Kg",
-                            dataIndex: "weight",
-                            width: 100,
-                            render: (val) => <b>{val} kg</b>,
-                          },
-                          {
-                            title: "Reps",
-                            dataIndex: "reps",
-                            render: (val) => `${val} reps`,
-                          },
-                        ]}
-                      />
-                    </Card>
+                      exerciseId={Number(exId)}
+                      exerciseName={exerciseName}
+                      sets={sets}
+                      isCompleted={isExerciseCompleted}
+                      workoutId={workout.id}
+                      onToggleComplete={onToggleExerciseComplete}
+                    />
                   );
                 })}
               </div>
-            </Panel>
-          );
+            ),
+          };
         })}
-      </Collapse>
+      />
     </Space>
   );
 }
