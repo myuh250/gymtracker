@@ -6,12 +6,18 @@ import ExerciseFormModal from "./ExerciseFormModal";
 export default function ExerciseCreate({ onAdd }) {
   const [open, setOpen] = useState(false);
 
-  const handleSubmit = (values, file) => {
-    const mediaUrl = file ? URL.createObjectURL(file) : undefined;
+  const handleSubmit = async (values, file) => {
+    let mediaUrl = undefined;
+    if (file) {
+      mediaUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    }
     const resultItem = {
       ...values,
       mediaUrl,
-      mediaFile: file,
       id: Date.now(),
     };
     if (onAdd) onAdd(resultItem);
