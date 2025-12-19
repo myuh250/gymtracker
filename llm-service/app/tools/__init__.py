@@ -15,8 +15,7 @@ EXERCISE_SEARCH_TOOL = {
             },
             "limit": {
                 "type": "integer",
-                "description": "Number of results (default 5)",
-                "default": 5
+                "description": "Number of results (default 5)"
             }
         },
         "required": ["query"]
@@ -35,8 +34,7 @@ USER_WORKOUT_SEARCH_TOOL = {
             },
             "limit": {
                 "type": "integer",
-                "description": "Number of results (default 5)",
-                "default": 5
+                "description": "Number of results (default 5)"
             }
         },
         "required": ["query"]
@@ -51,8 +49,7 @@ USER_STATS_TOOL = {
         "properties": {
             "days": {
                 "type": "integer",
-                "description": "Number of days to look back (default 30)",
-                "default": 30
+                "description": "Number of days to look back (default 30)"
             }
         },
         "required": []

@@ -5,7 +5,7 @@ import logging
 
 from app.schemas.llm import ChatRequest, ChatResponse, ChatMessage, UsageStats
 from app.schemas.memory import SessionHistory
-from app.services.gemini import GeminiService, get_gemini_service
+from app.services.openai_service import OpenAIService, get_openai_service
 from app.services.memory_service import MemoryService, get_memory_service
 from app.tools import ALL_TOOLS
 from app.services.tool_executor import get_tool_executor
@@ -21,7 +21,7 @@ async def chat(
     response_obj: Response,
     session_id: Optional[str] = Header(None, alias="X-Session-ID"),
     user_id: Optional[int] = Header(None, alias="X-User-ID"),  # Optional for now
-    gemini: GeminiService = Depends(get_gemini_service),
+    openai_service: OpenAIService = Depends(get_openai_service),
     memory: MemoryService = Depends(get_memory_service)
 ) -> ChatResponse:
     """
@@ -29,7 +29,7 @@ async def chat(
     
     Architecture:
         1. Load conversation history (SHORT-TERM: Redis)
-        2. Ask Gemini: need tools? (Decision point)
+        2. Ask OpenAI: need tools? (Decision point)
         3. Branch:
            - Tools needed → LONG-TERM path (RAG)
            - No tools → SHORT-TERM path (Redis only)
@@ -45,6 +45,9 @@ async def chat(
     if not session_id:
         session_id = str(uuid.uuid4())
     
+    # Log request info
+    logger.info(f"🔵 NEW REQUEST | Session: {session_id[:8]}... | User: {user_id or 'N/A'} | Message: '{request.message[:50]}...'")
+    
     try:
         # Save user message
         user_msg = ChatMessage(role="user", content=request.message)
@@ -53,20 +56,20 @@ async def chat(
         # Load conversation history from Redis
         history = await memory.get_recent_messages(session_id, limit=5)
         
-        # Check if Gemini needs tools (RAG decision point)
-        gemini_response = await gemini.check_needs_tools(
+        # Check if OpenAI needs tools (RAG decision point)
+        openai_response = await openai_service.check_needs_tools(
             request=request,
             tools=ALL_TOOLS,
             memory_messages=history
         )
         
         # Extract tool calls if any
-        tool_calls = _extract_tool_calls(gemini_response)
+        tool_calls = _extract_tool_calls(openai_response)
         
         if tool_calls:
-            logger.info(f"LONG-TERM MEMORY: Gemini needs {len(tool_calls)} tool(s)")
+            logger.info(f"🔴 LONG-TERM MEMORY (LTM) PATH | Tools needed: {len(tool_calls)}")
             for tc in tool_calls:
-                logger.info(f"   → Tool: {tc['name']} with args: {tc['args']}")
+                logger.info(f"   🔧 Tool: {tc['name']} | Args: {tc['args']}")
             
             # Execute RAG tools
             tool_executor = get_tool_executor()
@@ -76,21 +79,22 @@ async def chat(
             )
             
             # Synthesize with RAG + conversation history
-            response = await gemini.chat_with_tool_results(
+            response = await openai_service.chat_with_tool_results(
                 request=request,
                 tool_results=tool_results,
                 memory_messages=history
             )
             
-            logger.info("✅ Response: LONG-TERM (RAG) + SHORT-TERM (Redis)")
+            logger.info("✅ LTM RESPONSE SENT | Used: RAG + Redis conversation history")
             
         else:
-            response = await gemini.chat_with_memory(
+            logger.info(f"🟢 SHORT-TERM MEMORY (STM) PATH | No tools needed, using Redis only")
+            response = await openai_service.chat_with_memory(
                 request=request,
                 memory_messages=history
             )
             
-            logger.info("✅ Response: SHORT-TERM (Redis) only")
+            logger.info("✅ STM RESPONSE SENT | Used: Redis conversation history only")
         
         # Save assistant response
         ai_msg = ChatMessage(role="assistant", content=response.response)
@@ -112,18 +116,19 @@ async def chat(
         )
 
 
-def _extract_tool_calls(gemini_response) -> List[Dict[str, Any]]:
-    """Extract tool calls from Gemini response"""
+def _extract_tool_calls(openai_response) -> List[Dict[str, Any]]:
+    """Extract tool calls from OpenAI response"""
     tool_calls = []
     
     try:
-        for part in gemini_response.candidates[0].content.parts:
-            if hasattr(part, 'function_call') and part.function_call:
+        if openai_response.choices[0].message.tool_calls:
+            for tool_call in openai_response.choices[0].message.tool_calls:
+                import json
                 tool_calls.append({
-                    'name': part.function_call.name,
-                    'args': dict(part.function_call.args)
+                    'name': tool_call.function.name,
+                    'args': json.loads(tool_call.function.arguments)
                 })
-    except (IndexError, AttributeError):
+    except (IndexError, AttributeError, KeyError):
         pass
     
     return tool_calls

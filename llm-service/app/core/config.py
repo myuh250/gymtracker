@@ -21,22 +21,22 @@ class Settings(BaseSettings):
         description="Comma-separated list of allowed origins"
     )
     
-    # Gemini API settings
-    GEMINI_API_KEY: str = Field(
+    # OpenAI API settings
+    OPENAI_API_KEY: str = Field(
         ..., # Required environment variable
-        description="Gemini API key"
+        description="OpenAI API key"
     )
-    GEMINI_MODEL: str = Field(
-        default="gemini-2.5-flash",
-        description="Gemini model name"
+    OPENAI_MODEL: str = Field(
+        default="gpt-4o-mini",
+        description="OpenAI model name"
     )
-    GEMINI_TEMPERATURE: float = Field(
+    OPENAI_TEMPERATURE: float = Field(
         default=0.7,
         ge=0.0,
         le=2.0,
         description="Temperature for response generation"
     )
-    GEMINI_MAX_TOKENS: int = Field(
+    OPENAI_MAX_TOKENS: int = Field(
         default=2048,
         gt=0,
         description="Maximum tokens for response"

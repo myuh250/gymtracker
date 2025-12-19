@@ -7,6 +7,17 @@ from app.core.redis_client import get_redis_pool, verify_redis_connection
 from app.api.routes_health import router as health_router
 from app.api.routes_chat import router as chat_router
 
+# ====================================
+# Logging Configuration
+# ====================================
+# Configure logging BEFORE app initialization
+# FastAPI/Uvicorn only configures uvicorn.access and uvicorn.error
+# This enables logging for all app modules
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+)
+
 logger = logging.getLogger(__name__)
 
 # Create FastAPI instance
@@ -37,7 +48,7 @@ async def startup_event():
     
     Initializes and verifies all required connections:
     - Redis connection pool
-    - Gemini API configuration
+    - OpenAI API configuration
     """
     logger.info(f"🚀 Starting {settings.APP_NAME} v{settings.VERSION}")
     

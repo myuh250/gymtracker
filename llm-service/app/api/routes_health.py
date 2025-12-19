@@ -61,7 +61,7 @@ async def health_check(redis: Redis = Depends(get_redis)):
             },
             "llm": {
                 "status": "configured",
-                "model": settings.GEMINI_MODEL
+                "model": settings.OPENAI_MODEL
             }
         }
     }

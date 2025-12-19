@@ -28,10 +28,11 @@ class ExerciseEmbedding(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     exercise_id = Column(BigInteger, nullable=False, unique=True, index=True)
+    exercise_name = Column(String(255), nullable=False)
     
     # Content
     embedding_text = Column(Text, nullable=False)  # Combined text from name + description
-    embedding = Column(Vector(768), nullable=False)  # Gemini embedding dimension
+    embedding = Column(Vector(1536), nullable=False)  # OpenAI text-embedding-3-small dimension
     
     # Metadata for filtering (from backend Exercise entity)
     muscle_group = Column(String(50))  # Matches backend muscleGroup
@@ -68,7 +69,7 @@ class WorkoutLogEmbedding(Base):
     
     # Content
     summary_text = Column(Text, nullable=False)
-    embedding = Column(Vector(768), nullable=False)
+    embedding = Column(Vector(1536), nullable=False)  # OpenAI text-embedding-3-small dimension
     
     # Metadata
     workout_date = Column(Date, nullable=False, index=True)
@@ -107,7 +108,7 @@ class KnowledgeBase(Base):
     title = Column(String(200), nullable=False)
     content = Column(Text, nullable=False)
     category = Column(String(50), index=True)  # 'form', 'nutrition', 'recovery', 'programming'
-    embedding = Column(Vector(768), nullable=False)
+    embedding = Column(Vector(1536), nullable=False)  # OpenAI text-embedding-3-small dimension
     source = Column(String(100))
     
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

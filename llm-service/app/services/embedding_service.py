@@ -4,7 +4,7 @@ import asyncio
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-import google.generativeai as genai
+from openai import AsyncOpenAI
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingService:
     """
-    Service for generating vector embeddings using Gemini API.
+    Service for generating vector embeddings using OpenAI API.
     
     Features:
     - Single and batch embedding generation
@@ -30,17 +30,17 @@ class EmbeddingService:
     - Text preparation helpers for exercises and workouts
     """
     
-    # Gemini embedding model and configuration
-    EMBEDDING_MODEL = "models/text-embedding-004"
-    EMBEDDING_DIMENSION = 768
-    MAX_BATCH_SIZE = 100  # Gemini API limit
+    # OpenAI embedding model and configuration
+    EMBEDDING_MODEL = "text-embedding-3-small"
+    EMBEDDING_DIMENSION = 1536  # OpenAI text-embedding-3-small dimension
+    MAX_BATCH_SIZE = 100  # OpenAI API limit
     
     def __init__(self):
-        """Initialize Gemini API configuration and cache."""
-        if not settings.GEMINI_API_KEY:
-            raise ValueError("GEMINI_API_KEY is not set in environment variables")
+        """Initialize OpenAI API configuration and cache."""
+        if not settings.OPENAI_API_KEY:
+            raise ValueError("OPENAI_API_KEY is not set in environment variables")
         
-        genai.configure(api_key=settings.GEMINI_API_KEY)
+        self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         
         # Simple in-memory cache: {text_hash: embedding}
         self._cache: Dict[str, List[float]] = {}
@@ -104,7 +104,7 @@ class EmbeddingService:
             use_cache: Whether to use cache (default: True)
             
         Returns:
-            Embedding vector (768 dimensions)
+            Embedding vector (1536 dimensions for text-embedding-3-small)
             
         Raises:
             ValueError: If text is empty
@@ -123,19 +123,13 @@ class EmbeddingService:
         logger.debug(f"Generating embedding for text: {text[:50]}...")
         
         try:
-            # Call Gemini API in thread pool to avoid blocking event loop
-            loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(
-                None,
-                lambda: genai.embed_content(
-                    model=self.EMBEDDING_MODEL,
-                    content=text,
-                    task_type="retrieval_document",
-                    title=None
-                )
+            # Call OpenAI API
+            response = await self.client.embeddings.create(
+                model=self.EMBEDDING_MODEL,
+                input=text
             )
             
-            embedding = result['embedding']
+            embedding = response.data[0].embedding
             
             # Validate embedding dimension
             if len(embedding) != self.EMBEDDING_DIMENSION:
@@ -215,19 +209,15 @@ class EmbeddingService:
                     # Extract just the texts for API call
                     texts_to_embed = [text for _, text in uncached_texts]
                     
-                    # Call Gemini API for batch in thread pool to avoid blocking event loop
-                    loop = asyncio.get_running_loop()
-                    result = await loop.run_in_executor(
-                        None,
-                        lambda: genai.embed_content(
-                            model=self.EMBEDDING_MODEL,
-                            content=texts_to_embed,
-                            task_type="retrieval_document"
-                        )
+                    # Call OpenAI API for batch
+                    response = await self.client.embeddings.create(
+                        model=self.EMBEDDING_MODEL,
+                        input=texts_to_embed
                     )
                     
                     # Store results with original indices
-                    for (idx, text), embedding in zip(uncached_texts, result['embedding']):
+                    for (idx, text), embedding_data in zip(uncached_texts, response.data):
+                        embedding = embedding_data.embedding
                         cached_embeddings[idx] = embedding
                         
                         # Save to cache
@@ -384,7 +374,7 @@ def get_embedding_service() -> EmbeddingService:
         EmbeddingService instance
         
     Raises:
-        ValueError: If GEMINI_API_KEY is not configured
+        ValueError: If OPENAI_API_KEY is not configured
     """
     global _embedding_service
     

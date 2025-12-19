@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class ToolExecutor:
-    """Execute tools requested by Gemini Function Calling"""
+    """Execute tools requested by OpenAI Function Calling"""
     
     def __init__(self):
         self.search_service = get_vector_search_service()
@@ -24,7 +24,7 @@ class ToolExecutor:
         
         Args:
             tool_name: Name of tool to execute
-            tool_args: Arguments from Gemini
+            tool_args: Arguments from OpenAI
             user_id: Current user ID
             
         Returns:

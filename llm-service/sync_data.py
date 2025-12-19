@@ -10,7 +10,7 @@ Usage:
 Requirements:
     - Backend must be running (http://localhost:8080)
     - PostgreSQL must be running
-    - .env file with GEMINI_API_KEY and BACKEND_SERVICE_TOKEN
+    - .env file with OPENAI_API_KEY and BACKEND_SERVICE_TOKEN
 """
 
 import asyncio
@@ -91,6 +91,7 @@ async def sync_exercises(stats: SyncStats) -> None:
                 # Upsert using PostgreSQL ON CONFLICT
                 stmt = insert(ExerciseEmbedding).values(
                     exercise_id=exercise['id'],
+                    exercise_name=exercise['name'],
                     embedding_text=text,
                     embedding=embedding_vector,
                     muscle_group=exercise.get('muscleGroup'),
@@ -102,6 +103,7 @@ async def sync_exercises(stats: SyncStats) -> None:
                 stmt = stmt.on_conflict_do_update(
                     index_elements=['exercise_id'],
                     set_={
+                        'exercise_name': exercise['name'],
                         'embedding_text': text,
                         'embedding': embedding_vector,
                         'muscle_group': exercise.get('muscleGroup'),
@@ -535,7 +537,7 @@ if __name__ == "__main__":
     print("\n💡 Make sure:")
     print("   1. Backend is running (http://localhost:8080)")
     print("   2. PostgreSQL is running")
-    print("   3. .env has GEMINI_API_KEY and BACKEND_SERVICE_TOKEN")
+    print("   3. .env has OPENAI_API_KEY and BACKEND_SERVICE_TOKEN")
     print("   4. Database tables created (alembic upgrade head)")
     
     asyncio.run(main())
