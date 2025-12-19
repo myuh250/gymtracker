@@ -19,31 +19,23 @@ const getMuscleColor = (muscle) => {
 export default function ExerciseDetail({ exercise }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isVideo, setIsVideo] = useState(false);
+  const [mediaError, setMediaError] = useState(false);
   const videoRef = useRef(null);
 
   useEffect(() => {
+    setMediaError(false);
     if (!exercise) {
       setPreviewUrl(null);
       setIsVideo(false);
       return;
     }
 
-    if (exercise.mediaFile && typeof exercise.mediaFile === "object") {
-      const file = exercise.mediaFile;
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      // Check MIME type để biết là video hay ảnh
-      setIsVideo(file.type?.startsWith("video/") || /video/i.test(file.type));
-      return () => {
-        URL.revokeObjectURL(url);
-      };
-    }
-
     if (exercise.mediaUrl) {
       setPreviewUrl(exercise.mediaUrl);
       const isVid =
         /\.(mp4|webm|ogg|mov)(\?|$)/i.test(exercise.mediaUrl) ||
-        /video/i.test(exercise.mediaUrl);
+        /video/i.test(exercise.mediaUrl) ||
+        exercise.mediaUrl.startsWith("data:video/");
       setIsVideo(isVid);
     } else {
       setPreviewUrl(null);
@@ -113,7 +105,7 @@ export default function ExerciseDetail({ exercise }) {
             minHeight: 200,
           }}
         >
-          {previewUrl ? (
+          {previewUrl && !mediaError ? (
             isVideo ? (
               <video
                 ref={videoRef}
@@ -123,13 +115,17 @@ export default function ExerciseDetail({ exercise }) {
                 loop
                 playsInline
                 controls={false}
+                onError={() => {
+                  console.error("Video load error");
+                  setMediaError(true);
+                }}
                 style={{
                   maxWidth: "100%",
                   height: "auto",
                   maxHeight: 500,
                   objectFit: "contain",
                   display: "block",
-                  pointerEvents: "none", // Không cho bấm
+                  pointerEvents: "none",
                   borderRadius: 12,
                 }}
               />
@@ -147,6 +143,7 @@ export default function ExerciseDetail({ exercise }) {
                 }}
                 fallback="https://via.placeholder.com/800x400?text=No+Image"
                 preview={false}
+                onError={() => setMediaError(true)}
               />
             )
           ) : (
@@ -162,7 +159,11 @@ export default function ExerciseDetail({ exercise }) {
               <FireFilled
                 style={{ fontSize: 48, color: muscleColor, marginBottom: 16 }}
               />
-              <Text type="secondary">Chưa có hình ảnh minh họa</Text>
+              <Text type="secondary">
+                {mediaError
+                  ? "Không thể tải media"
+                  : "Chưa có hình ảnh minh họa"}
+              </Text>
             </div>
           )}
         </div>
