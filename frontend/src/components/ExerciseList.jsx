@@ -1,24 +1,12 @@
 import React, { useState, useMemo, useCallback } from "react";
-import {
-  List,
-  Input,
-  Select,
-  Popconfirm,
-  Typography,
-  Tag,
-  message,
-  Empty,
-  Button,
-} from "antd";
-import {
-  SearchOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  FireFilled,
-} from "@ant-design/icons";
+import { Input, Select, Typography, message, Empty, Tag } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
+import ExerciseCard from "./ExerciseCard";
+import ExerciseFormModal from "./ExerciseFormModal";
+import ExerciseCreate from "./ExerciseCreate";
 
 const { Option } = Select;
-const { Text, Title } = Typography;
+const { Title } = Typography;
 
 const styles = `
   .exercise-item{transition:all .18s; border:1px solid transparent}
@@ -27,149 +15,6 @@ const styles = `
   .exercise-item:hover .item-actions{opacity:1;pointer-events:auto}
   .exercise-item.active{background:#eff6ff!important;border-color:#bfdbfe!important}
 `;
-
-const ExerciseItem = React.memo(
-  ({ item, isSelected, onSelect, onEdit, onDelete }) => {
-    const getMuscleColor = (muscle) => {
-      const colors = {
-        Chest: "volcano",
-        Back: "geekblue",
-        Legs: "red",
-        Shoulders: "gold",
-        Abs: "purple",
-        Cardio: "green",
-      };
-      return colors[muscle] || "blue";
-    };
-
-    return (
-      <div
-        className={`exercise-item ${isSelected ? "active" : ""}`}
-        onClick={() => onSelect(item)}
-        style={{
-          position: "relative",
-          background: "#fff",
-          borderRadius: 16,
-          padding: "16px",
-          marginBottom: 12,
-          cursor: "pointer",
-        }}
-      >
-        <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-          <div
-            style={{
-              width: 56,
-              height: 56,
-              borderRadius: 12,
-              background: item.mediaUrl
-                ? `url(${item.mediaUrl}) center/cover no-repeat`
-                : "#f1f5f9",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            {!item.mediaUrl && (
-              <FireFilled
-                style={{
-                  fontSize: 24,
-                  color: getMuscleColor(item.muscleGroup),
-                }}
-              />
-            )}
-          </div>
-
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <Text
-              strong
-              style={{
-                fontSize: 15,
-                color: "#1e293b",
-                marginBottom: 4,
-                display: "block",
-              }}
-              ellipsis
-            >
-              {item.name}
-            </Text>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                marginBottom: 4,
-              }}
-            >
-              <Tag
-                color={getMuscleColor(item.muscleGroup)}
-                style={{
-                  border: "none",
-                  borderRadius: 6,
-                  fontWeight: 600,
-                  fontSize: 10,
-                  lineHeight: "18px",
-                  margin: 0,
-                }}
-              >
-                {item.muscleGroup?.toUpperCase()}
-              </Tag>
-            </div>
-            <Text type="secondary" style={{ fontSize: 12 }} ellipsis>
-              {item.description || "Chưa có mô tả chi tiết"}
-            </Text>
-          </div>
-        </div>
-
-        {/* Action Buttons: Ẩn/Hiện bằng CSS Class .item-actions */}
-        <div
-          className="item-actions"
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            display: "flex",
-            gap: 4,
-            background: isSelected ? "#eff6ff" : "#fff",
-            borderRadius: 20,
-            paddingLeft: 8,
-          }}
-        >
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={(e) => onEdit(item, e)}
-            style={{ color: "#64748b" }}
-          />
-          <Popconfirm
-            title="Xoá bài tập?"
-            onConfirm={(e) => {
-              e.stopPropagation();
-              onDelete(item.id);
-            }}
-            onCancel={(e) => e.stopPropagation()}
-            okText="Xoá"
-            cancelText="Hủy"
-            okButtonProps={{ danger: true, type: "primary" }}
-            placement="left"
-          >
-            <Button
-              type="text"
-              size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={(e) => e.stopPropagation()}
-            />
-          </Popconfirm>
-        </div>
-      </div>
-    );
-  }
-);
-
-import ExerciseFormModal from "./ExerciseFormModal";
-import ExerciseCreate from "./ExerciseCreate";
 
 export default function ExerciseList({
   data,
@@ -279,6 +124,9 @@ export default function ExerciseList({
             style={{ width: 140 }}
             onChange={setFilterType}
           >
+            <Option value="">
+              <Tag>Tất cả</Tag>
+            </Option>
             {["Chest", "Back", "Legs", "Shoulders", "Abs", "Cardio"].map(
               (m) => (
                 <Option key={m} value={m}>
@@ -299,15 +147,11 @@ export default function ExerciseList({
           background: "#f8fafc",
         }}
       >
-        <List
-          dataSource={listHienThi}
-          locale={{
-            emptyText: (
-              <Empty description="Trống" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-            ),
-          }}
-          renderItem={(item) => (
-            <ExerciseItem
+        {listHienThi.length === 0 ? (
+          <Empty description="Trống" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        ) : (
+          listHienThi.map((item) => (
+            <ExerciseCard
               key={item.id}
               item={item}
               isSelected={selectedId === item.id}
@@ -315,8 +159,8 @@ export default function ExerciseList({
               onEdit={handleOpenEdit}
               onDelete={onDelete}
             />
-          )}
-        />
+          ))
+        )}
       </div>
 
       <ExerciseFormModal
