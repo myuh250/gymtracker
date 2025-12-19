@@ -1,28 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout, Typography, Divider } from "antd";
 import WorkoutBuilder from "../components/WorkoutBuilder";
 import WorkoutList from "../components/WorkoutList";
+import {
+  getExercises,
+  getWorkouts,
+  addWorkout,
+  updateWorkout,
+  removeWorkout,
+  toggleWorkoutCompleted,
+  toggleExerciseCompleted,
+} from "../utils/storage";
 
 const { Content } = Layout;
 const { Title } = Typography;
 
-const SAMPLE_EXERCISES = [
-  { id: 1, name: "Hít đất (Push Up)", muscleGroup: "Chest" },
-  { id: 2, name: "Kéo xà (Pull Up)", muscleGroup: "Back" },
-  { id: 3, name: "Squat (Gánh tạ)", muscleGroup: "Legs" },
-  { id: 4, name: "Đẩy vai (Overhead Press)", muscleGroup: "Shoulders" },
-];
-
 export default function WorkoutPage() {
-  // State lưu danh sách các buổi tập
   const [workouts, setWorkouts] = useState([]);
+  const [exercises, setExercises] = useState([]);
+  const [editingWorkout, setEditingWorkout] = useState(null);
 
-  // Hàm xử lý khi tạo buổi tập thành công từ Modal
+  useEffect(() => {
+    setExercises(getExercises());
+    setWorkouts(getWorkouts());
+  }, []);
+
   const handleCreateWorkout = (newWorkoutPayload) => {
-    console.log("New Workout Payload:", newWorkoutPayload);
+    if (editingWorkout) {
+      // Update mode
+      updateWorkout({ ...newWorkoutPayload, id: editingWorkout.id });
+      setEditingWorkout(null);
+    } else {
+      // Create mode
+      addWorkout(newWorkoutPayload);
+    }
+    setWorkouts(getWorkouts());
+  };
 
-    // Thêm buổi tập mới vào đầu danh sách
-    setWorkouts((prev) => [newWorkoutPayload, ...prev]);
+  const handleToggleComplete = (workoutId) => {
+    toggleWorkoutCompleted(workoutId);
+    setWorkouts(getWorkouts());
+  };
+
+  const handleToggleExerciseComplete = (workoutId, exerciseId) => {
+    toggleExerciseCompleted(workoutId, exerciseId);
+    setWorkouts(getWorkouts());
+  };
+
+  const handleEditWorkout = (workout) => {
+    setEditingWorkout(workout);
+  };
+
+  const handleDeleteWorkout = (workoutId) => {
+    removeWorkout(workoutId);
+    setWorkouts(getWorkouts());
   };
 
   return (
@@ -48,15 +79,24 @@ export default function WorkoutPage() {
           </Title>
           {/* Nút tạo nằm trong Component Builder */}
           <WorkoutBuilder
-            exercises={SAMPLE_EXERCISES}
+            exercises={exercises}
             onCreate={handleCreateWorkout}
+            editingWorkout={editingWorkout}
+            onCancelEdit={() => setEditingWorkout(null)}
           />
         </div>
 
         <Divider />
 
         {/* Phần hiển thị danh sách */}
-        <WorkoutList workouts={workouts} exercises={SAMPLE_EXERCISES} />
+        <WorkoutList
+          workouts={workouts}
+          exercises={exercises}
+          onToggleComplete={handleToggleComplete}
+          onToggleExerciseComplete={handleToggleExerciseComplete}
+          onEdit={handleEditWorkout}
+          onDelete={handleDeleteWorkout}
+        />
       </Content>
     </Layout>
   );
