@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 from pydantic import Field, field_validator, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -21,22 +21,22 @@ class Settings(BaseSettings):
         description="Comma-separated list of allowed origins"
     )
     
-    # Gemini API settings
-    GEMINI_API_KEY: str = Field(
+    # OpenAI API settings
+    OPENAI_API_KEY: str = Field(
         ..., # Required environment variable
-        description="Gemini API key"
+        description="OpenAI API key"
     )
-    GEMINI_MODEL: str = Field(
-        default="gemini-2.5-flash",
-        description="Gemini model name"
+    OPENAI_MODEL: str = Field(
+        default="gpt-4o-mini",
+        description="OpenAI model name"
     )
-    GEMINI_TEMPERATURE: float = Field(
+    OPENAI_TEMPERATURE: float = Field(
         default=0.7,
         ge=0.0,
         le=2.0,
         description="Temperature for response generation"
     )
-    GEMINI_MAX_TOKENS: int = Field(
+    OPENAI_MAX_TOKENS: int = Field(
         default=2048,
         gt=0,
         description="Maximum tokens for response"
@@ -48,6 +48,83 @@ class Settings(BaseSettings):
         case_sensitive=True,
         extra="ignore"
     )
+    
+    # REDIS settings
+    REDIS_HOST: str = Field(
+        default="localhost",
+        description="Redis host"
+    )
+    REDIS_PORT: int = Field(
+        default=6379,
+        description="Redis port"
+    )
+    REDIS_DB: int = Field(
+        default=0,
+        description="Redis database number (0-15)"
+    )
+    REDIS_PASSWORD: Optional[str] = Field(
+        default=None,
+        description="Redis password (if auth enabled)"
+    )
+    REDIS_MAX_CONNECTIONS: int = Field(
+        default=10,
+        description="Maximum Redis pool connections"
+    )
+    
+    # Session settings
+    SESSION_TTL_SECONDS: int = Field(
+        default=7200,  
+        description="Session expiry time in seconds"
+    )
+    MAX_MESSAGES_PER_SESSION: int = Field(
+        default=50,
+        description="Maximum messages to keep per session"
+    )
+    
+    # PostgreSQL + pgvector for RAG
+    POSTGRES_HOST: str = Field(
+        default="localhost",
+        description="PostgreSQL host"
+    )
+    POSTGRES_PORT: int = Field(
+        default=5433,
+        description="PostgreSQL port"
+    )
+    POSTGRES_DB: str = Field(
+        default="gym_rag",
+        description="PostgreSQL database name"
+    )
+    POSTGRES_USER: str = Field(
+        default="raguser",
+        description="PostgreSQL user"
+    )
+    POSTGRES_PASSWORD: str = Field(
+        default="ragpassword",
+        description="PostgreSQL password"
+    )
+    DEBUG: bool = Field(
+        default=False,
+        description="Debug mode (enables SQL echo)"
+    )
+    
+    # Backend API (for RAG data sync)
+    BACKEND_BASE_URL: str = Field(
+        default="http://localhost:8080",
+        description="Backend API base URL"
+    )
+    BACKEND_SERVICE_TOKEN: str = Field(
+        ...,  # Required field
+        description="Service token for backend authentication (get from /api/service/token)"
+    )
+    
+    @computed_field
+    @property
+    def DATABASE_URL(self) -> str:
+        """Construct PostgreSQL connection URL for asyncpg"""
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
     
     @computed_field
     @property
@@ -61,5 +138,9 @@ class Settings(BaseSettings):
 
 
 # Create a global settings instance
-settings = Settings()
+def get_settings() -> Settings:
+    """Get settings instance (for dependency injection)"""
+    return Settings()
+
+settings = get_settings()
 

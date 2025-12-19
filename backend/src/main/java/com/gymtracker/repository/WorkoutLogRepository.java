@@ -82,5 +82,49 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
      * @return Count of completed workout logs
      */
     long countByUserIdAndIsCompletedTrue(Long userId);
+    
+    // ========== RAG Sync Methods ==========
+    
+    /**
+     * Find workout logs for a specific user with date range (for personalized RAG)
+     */
+    @Query("SELECT wl FROM WorkoutLog wl WHERE wl.user.id = :userId " +
+           "AND wl.logDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY wl.logDate DESC")
+    List<WorkoutLog> findByUserIdAndDateRangeList(
+        @Param("userId") Long userId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
+    
+    /**
+     * Find workout logs updated since a specific timestamp (for incremental sync)
+     */
+    @Query("SELECT wl FROM WorkoutLog wl WHERE wl.updatedAt > :since ORDER BY wl.updatedAt ASC")
+    List<WorkoutLog> findByUpdatedAtAfter(@Param("since") java.time.LocalDateTime since);
+    
+    /**
+     * Find workout logs updated since timestamp for a specific user
+     */
+    @Query("SELECT wl FROM WorkoutLog wl WHERE wl.user.id = :userId " +
+           "AND wl.updatedAt > :since ORDER BY wl.updatedAt ASC")
+    List<WorkoutLog> findByUserIdAndUpdatedAtAfter(
+        @Param("userId") Long userId,
+        @Param("since") java.time.LocalDateTime since
+    );
+    
+    /**
+     * Get workout statistics for a user within a date range
+     */
+    @Query("SELECT COUNT(wl) as totalWorkouts, " +
+           "SUM(COALESCE(wl.totalDurationMinutes, 0)) as totalDuration " +
+           "FROM WorkoutLog wl " +
+           "WHERE wl.user.id = :userId " +
+           "AND wl.logDate >= :startDate " +
+           "AND wl.isCompleted = true")
+    Object[] getWorkoutStatsByUserAndDateRange(
+        @Param("userId") Long userId,
+        @Param("startDate") LocalDate startDate
+    );
 }
 
