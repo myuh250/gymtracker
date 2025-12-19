@@ -1,58 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { message } from "antd";
 import ExerciseList from "../components/ExerciseList";
 import ExerciseDetail from "../components/ExerciseDetail";
-
-const DATA_MAU = [
-  {
-    id: 1,
-    name: "Hít đất",
-    muscleGroup: "Chest",
-    description: "Tập ngực",
-    mediaUrl: "",
-  },
-  {
-    id: 2,
-    name: "Kéo xà",
-    muscleGroup: "Back",
-    description: "Tập lưng",
-    mediaUrl: "",
-  },
-];
+import {
+  getExercises,
+  addExercise,
+  updateExercise,
+  removeExercise,
+} from "../utils/storage";
 
 export default function HomePage() {
-  const [exercises, setExercises] = useState(DATA_MAU);
+  const [exercises, setExercises] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
 
-  // add
+  useEffect(() => {
+    setExercises(getExercises());
+  }, []);
+
   const handleAdd = (newItem) => {
-    const itemWithId = { ...newItem, id: Date.now() }; // Tạo ID giả bằng thời gian hiện tại
-    setExercises([...exercises, itemWithId]); // Gộp bài cũ + bài mới
+    const itemWithId = { ...newItem, id: Date.now() };
+    addExercise(itemWithId);
+    setExercises(getExercises());
     message.success("Đã thêm thành công!");
   };
 
-  // edit
-  const handleEdit = (updatedItem) => {
-    // Duyệt qua danh sách, tìm ID trùng thì thay bằng thằng mới
-    const newList = exercises.map((item) =>
-      item.id === updatedItem.id ? updatedItem : item
-    );
-    setExercises(newList);
-
-    // Nếu đang xem chi tiết bài này thì cập nhật luôn cái đang xem
+  const handleEdit = async (updatedItem) => {
+    // Convert File to base64 if present
+    if (updatedItem.mediaFile instanceof File) {
+      const dataUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(updatedItem.mediaFile);
+      });
+      updatedItem = { ...updatedItem, mediaUrl: dataUrl, mediaFile: undefined };
+    }
+    updateExercise(updatedItem);
+    setExercises(getExercises());
     if (selectedExercise?.id === updatedItem.id) {
       setSelectedExercise(updatedItem);
     }
     message.success("Đã sửa thành công!");
   };
 
-  // delete
   const handleDelete = (idToDelete) => {
-    // Giữ lại những thằng KHÁC cái ID cần xóa
-    const newList = exercises.filter((item) => item.id !== idToDelete);
-    setExercises(newList);
-
-    // Nếu đang xem bài bị xóa thì reset về null
+    removeExercise(idToDelete);
+    setExercises(getExercises());
     if (selectedExercise?.id === idToDelete) {
       setSelectedExercise(null);
     }
