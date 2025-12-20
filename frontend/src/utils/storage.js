@@ -86,18 +86,15 @@ export function toggleWorkoutCompleted(id) {
   return list.find((w) => w.id === id);
 }
 
-export function toggleExerciseCompleted(workoutId, exerciseId) {
+export function toggleSetCompleted(workoutId, setId) {
   const list = getWorkouts().map((w) => {
     if (w.id !== workoutId) return w;
 
-    const completedExercises = w.completedExercises || [];
-    const isCompleted = completedExercises.includes(exerciseId);
-
     return {
       ...w,
-      completedExercises: isCompleted
-        ? completedExercises.filter((id) => id !== exerciseId)
-        : [...completedExercises, exerciseId],
+      sets: w.sets.map((set) =>
+        set.id === setId ? { ...set, isCompleted: !set.isCompleted } : set
+      ),
     };
   });
   saveWorkouts(list);

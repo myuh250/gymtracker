@@ -9,7 +9,7 @@ import {
   updateWorkout,
   removeWorkout,
   toggleWorkoutCompleted,
-  toggleExerciseCompleted,
+  toggleSetCompleted,
 } from "../utils/storage";
 
 const { Content } = Layout;
@@ -42,8 +42,8 @@ export default function WorkoutPage() {
     setWorkouts(getWorkouts());
   };
 
-  const handleToggleExerciseComplete = (workoutId, exerciseId) => {
-    toggleExerciseCompleted(workoutId, exerciseId);
+  const handleToggleSetComplete = (workoutId, setId) => {
+    toggleSetCompleted(workoutId, setId);
     setWorkouts(getWorkouts());
   };
 
@@ -93,7 +93,7 @@ export default function WorkoutPage() {
           workouts={workouts}
           exercises={exercises}
           onToggleComplete={handleToggleComplete}
-          onToggleExerciseComplete={handleToggleExerciseComplete}
+          onToggleSetComplete={handleToggleSetComplete}
           onEdit={handleEditWorkout}
           onDelete={handleDeleteWorkout}
         />

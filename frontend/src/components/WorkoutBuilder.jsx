@@ -4,15 +4,14 @@ import {
   Button,
   Select,
   DatePicker,
-  InputNumber,
   message,
-  Card,
   Space,
   Typography,
   Divider,
 } from "antd";
-import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import ExerciseSessionCard from "./ExerciseSessionCard";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -51,9 +50,13 @@ export default function WorkoutBuilder({
           exerciseId: Number(exId),
           name: exercise ? exercise.name : `Exercise ${exId}`,
           sets: sets.map((s) => ({
+            id: s.id || Date.now() + Math.random(),
             setNumber: s.setNumber,
             reps: s.reps,
             weight: s.weight,
+            isCompleted: s.isCompleted || false,
+            notes: s.notes || "",
+            restTimeSeconds: s.restTimeSeconds || 60,
           })),
         };
       });
@@ -72,21 +75,25 @@ export default function WorkoutBuilder({
         id: Date.now() + Math.random(),
         exerciseId: found.id,
         name: found.name,
-        sets: [{ setNumber: 1, reps: 8, weight: 0 }],
+        sets: [
+          {
+            id: Date.now() + Math.random(),
+            setNumber: 1,
+            reps: 8,
+            weight: 0,
+            isCompleted: false,
+            notes: "",
+            restTimeSeconds: 60,
+          },
+        ],
       },
     ]);
     setSelectedExerciseId(null);
   };
 
-  const updateSet = (sessionId, setIndex, key, value) => {
+  const updateSet = (sessionId, newSets) => {
     setSessionExercises((s) =>
-      s.map((se) => {
-        if (se.id !== sessionId) return se;
-        const sets = se.sets.map((st, idx) =>
-          idx === setIndex ? { ...st, [key]: value } : st
-        );
-        return { ...se, sets };
-      })
+      s.map((se) => (se.id === sessionId ? { ...se, sets: newSets } : se))
     );
   };
 
@@ -98,7 +105,15 @@ export default function WorkoutBuilder({
               ...se,
               sets: [
                 ...se.sets,
-                { setNumber: se.sets.length + 1, reps: 8, weight: 0 },
+                {
+                  id: Date.now() + Math.random(),
+                  setNumber: se.sets.length + 1,
+                  reps: 8,
+                  weight: 0,
+                  isCompleted: false,
+                  notes: "",
+                  restTimeSeconds: 60,
+                },
               ],
             }
           : se
@@ -117,16 +132,17 @@ export default function WorkoutBuilder({
       logDate: date.format("YYYY-MM-DD"),
       notes: "(mock)",
       isCompleted: editingWorkout ? editingWorkout.isCompleted : false,
-      completedExercises: editingWorkout
-        ? editingWorkout.completedExercises
-        : [],
       totalDurationMinutes: 0,
       sets: sessionExercises.flatMap((se) =>
         se.sets.map((st) => ({
+          id: st.id,
           exerciseId: se.exerciseId,
           setNumber: st.setNumber,
           reps: st.reps,
           weight: st.weight,
+          isCompleted: st.isCompleted || false,
+          notes: st.notes || "",
+          restTimeSeconds: st.restTimeSeconds || 60,
         }))
       ),
     };
@@ -193,61 +209,13 @@ export default function WorkoutBuilder({
         ) : (
           <Space direction="vertical" style={{ width: "100%" }}>
             {sessionExercises.map((se) => (
-              <Card
+              <ExerciseSessionCard
                 key={se.id}
-                size="small"
-                title={se.name}
-                extra={
-                  <Button
-                    type="text"
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => removeExercise(se.id)}
-                  />
-                }
-              >
-                {se.sets.map((st, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      alignItems: "center",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Text style={{ width: 48 }}>Set {st.setNumber}</Text>
-                    <div style={{ display: "flex", gap: 15 }}>
-                      <div>
-                        <Text type="secondary" style={{ marginRight: 10 }}>
-                          Reps{" "}
-                        </Text>
-                        <InputNumber
-                          min={0}
-                          value={st.reps}
-                          onChange={(v) => updateSet(se.id, idx, "reps", v)}
-                        />
-                      </div>
-                      <div>
-                        <Text type="secondary" style={{ marginRight: 10 }}>
-                          Weight{" "}
-                        </Text>
-                        <InputNumber
-                          min={0}
-                          step={0.5}
-                          value={st.weight}
-                          onChange={(v) => updateSet(se.id, idx, "weight", v)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div style={{ textAlign: "right" }}>
-                  <Button size="small" onClick={() => addSetRow(se.id)}>
-                    Thêm set
-                  </Button>
-                </div>
-              </Card>
+                exercise={se}
+                onUpdateSet={updateSet}
+                onAddSet={addSetRow}
+                onRemove={removeExercise}
+              />
             ))}
           </Space>
         )}
