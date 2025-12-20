@@ -4,10 +4,11 @@ import {
   MessageOutlined,
   RobotOutlined,
   CloseOutlined,
-  SendOutlined,
   DeleteOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import ChatMessage from "./ChatMessage";
+import ChatInput from "./ChatInput";
 
 // CSS Animation và custom scrollbar
 const styles = `
@@ -215,67 +216,22 @@ export default function AIChat() {
               padding: "20px 16px",
               overflowY: "auto",
               background: "#f8fafc",
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
             }}
           >
             <div
-              style={{ textAlign: "center", fontSize: 12, color: "#94a3b8" }}
+              style={{
+                textAlign: "center",
+                fontSize: 12,
+                color: "#94a3b8",
+                marginBottom: 16,
+              }}
             >
               Hôm nay, {new Date().toLocaleTimeString().slice(0, 5)}
             </div>
 
-            {messages.map((msg) => {
-              const isBot = msg.sender === "bot";
-              return (
-                <div
-                  key={msg.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: isBot ? "flex-start" : "flex-end",
-                    alignItems: "flex-end",
-                    gap: 8,
-                  }}
-                >
-                  {isBot && (
-                    <Avatar
-                      size="small"
-                      icon={<RobotOutlined />}
-                      style={{ backgroundColor: "#e0e7ff", color: "#2563eb" }}
-                    />
-                  )}
-                  <div
-                    style={{
-                      maxWidth: "75%",
-                      padding: "12px 16px",
-                      borderRadius: isBot
-                        ? "16px 16px 16px 4px" // Bot: vuông góc dưới trái
-                        : "16px 16px 4px 16px", // User: vuông góc dưới phải
-                      background: isBot
-                        ? "#ffffff"
-                        : "linear-gradient(135deg, #3b82f6, #2563eb)",
-                      color: isBot ? "#334155" : "#ffffff",
-                      boxShadow: isBot
-                        ? "0 2px 8px rgba(0,0,0,0.05)"
-                        : "0 4px 12px rgba(37, 99, 235, 0.2)",
-                      fontSize: 14,
-                      lineHeight: 1.5,
-                      wordBreak: "break-word",
-                    }}
-                  >
-                    {msg.text}
-                  </div>
-                  {!isBot && (
-                    <Avatar
-                      size="small"
-                      icon={<UserOutlined />}
-                      style={{ backgroundColor: "#dbeafe", color: "#3b82f6" }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+            {messages.map((msg) => (
+              <ChatMessage key={msg.id} message={msg} />
+            ))}
 
             {loading && (
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -315,40 +271,13 @@ export default function AIChat() {
                 padding: 8,
                 borderRadius: 24,
                 border: "1px solid #e2e8f0",
-                transition: "border 0.2s",
               }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#3b82f6")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#e2e8f0")}
             >
-              <Input.TextArea
+              <ChatInput
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onPressEnter={(e) => {
-                  if (!e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-                placeholder="Nhập tin nhắn..."
-                autoSize={{ minRows: 1, maxRows: 4 }}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  resize: "none",
-                  boxShadow: "none",
-                  padding: "6px 12px",
-                }}
-              />
-              <Button
-                type="primary"
-                shape="circle"
-                onClick={sendMessage}
-                disabled={!input.trim() && !loading}
-                icon={<SendOutlined />}
-                style={{
-                  flexShrink: 0,
-                  background: input.trim() ? "#2563eb" : "#94a3b8", // Đổi màu khi có text
-                }}
+                onChange={setInput}
+                onSend={sendMessage}
+                disabled={loading}
               />
             </div>
             <div
