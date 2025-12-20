@@ -1,22 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Layout } from "antd";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import { useAuth } from "../contexts/AuthContext";
 
 const { Content } = Layout;
 
 export default function MainLayout() {
-  const navigate = useNavigate();
-  const [user, setUser] = useState({ fullName: "Guest" });
-
-  useEffect(() => {
-    const userStr = localStorage.getItem("user");
-    if (!userStr) {
-      navigate("/login");
-      return;
-    }
-    setUser(JSON.parse(userStr));
-  }, [navigate]);
+  const { user } = useAuth();
 
   return (
     <Layout style={{ minHeight: "100vh" }}>

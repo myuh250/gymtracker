@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Form, Input, Button, Card, Divider, Typography, message } from "antd";
 import { GoogleOutlined, UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleGoogleLogin = () => {
@@ -21,8 +23,7 @@ export default function LoginPage() {
         role: "USER",
       };
 
-      localStorage.setItem("mockAccessToken", mockResponse.token);
-      localStorage.setItem("user", JSON.stringify(mockResponse)); // Lưu info user
+      login(mockResponse, mockResponse.token);
 
       message.success({ content: "Đăng nhập Google thành công!", key: "auth" });
       setLoading(false);
@@ -35,15 +36,26 @@ export default function LoginPage() {
     setLoading(true);
 
     setTimeout(() => {
-      const mockResponse = {
-        token: "standard_token_abc_456",
-        email: "user@example.com",
-        fullName: "test",
-        role: "USER",
-      };
+      // Check if admin credentials
+      const isAdmin = values.email === "admin" && values.password === "admin";
 
-      localStorage.setItem("mockAccessToken", mockResponse.token);
-      localStorage.setItem("user", JSON.stringify(mockResponse));
+      const mockResponse = isAdmin
+        ? {
+            username: "admin",
+            email: "admin@gymtracker.com",
+            fullName: "Admin User",
+            role: "ROLE_ADMIN",
+          }
+        : {
+            username: values.email,
+            email: "user@example.com",
+            fullName: "Test User",
+            role: "ROLE_USER",
+          };
+
+      const token = isAdmin ? "admin_token_xyz_789" : "standard_token_abc_456";
+
+      login(mockResponse, token);
 
       message.success(`Xin chào, ${mockResponse.fullName}!`);
       setLoading(false);

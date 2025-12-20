@@ -1,30 +1,33 @@
 import React from "react";
-import { Layout, Menu, Avatar, Typography } from "antd";
+import { Layout, Menu, Button, Typography, Avatar, Tag } from "antd";
 import {
   ThunderboltOutlined,
   ScheduleOutlined,
-  UserOutlined,
   LogoutOutlined,
+  SettingOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const { Sider } = Layout;
-const { Text, Title } = Typography;
+const { Title, Text } = Typography;
 
 export default function Sidebar({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout, isAdmin } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    navigate("/login");
+    logout();
   };
 
   const menuItems = [
     { key: "/", icon: <ThunderboltOutlined />, label: "Bài tập" },
     { key: "/workout", icon: <ScheduleOutlined />, label: "Tập Luyện" },
-    { key: "/profile", icon: <UserOutlined />, label: "Thông tin cá nhân" },
+    ...(isAdmin()
+      ? [{ key: "/admin", icon: <SettingOutlined />, label: "Quản lý Admin" }]
+      : []),
   ];
 
   // highlight khi chọn
@@ -77,7 +80,7 @@ export default function Sidebar({ user }) {
         }}
       />
 
-      {/* User info */}
+      {/* User Info & Logout */}
       <div
         style={{
           position: "absolute",
@@ -87,41 +90,46 @@ export default function Sidebar({ user }) {
           borderTop: "1px solid #f0f0f0",
         }}
       >
+        {/* User Info */}
         <div
-          onClick={handleLogout}
           style={{
-            cursor: "pointer",
             display: "flex",
-            gap: 15,
+            gap: 12,
             alignItems: "center",
-            color: "#595959",
-            padding: "8px",
+            marginBottom: 16,
+            padding: "12px",
+            background: "#f5f5f5",
             borderRadius: 8,
-            transition: "all 0.3s",
           }}
-          // Hover
-          onMouseEnter={(e) => (e.currentTarget.style.background = "#f5f5f5")}
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.background = "transparent")
-          }
         >
           <Avatar
-            size="large"
+            size={40}
             src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
             icon={<UserOutlined />}
           />
-
-          <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-            <Text strong style={{ fontSize: 15 }}>
-              {user?.fullName || "User"}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <Text strong style={{ fontSize: 14, display: "block" }} ellipsis>
+              {user?.fullName || user?.username || "User"}
             </Text>
-            <Text type="secondary" style={{ fontSize: 12 }}>
-              Đăng xuất
-            </Text>
+            <Tag
+              color={user?.role === "ROLE_ADMIN" ? "red" : "blue"}
+              style={{ fontSize: 11, marginTop: 4 }}
+            >
+              {user?.role === "ROLE_ADMIN" ? "Admin" : "User"}
+            </Tag>
           </div>
-
-          <LogoutOutlined style={{ fontSize: 18 }} />
         </div>
+
+        {/* Logout Button */}
+        <Button
+          type="default"
+          icon={<LogoutOutlined />}
+          onClick={handleLogout}
+          block
+          size="large"
+        >
+          Đăng xuất
+        </Button>
       </div>
     </Sider>
   );
