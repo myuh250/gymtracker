@@ -42,6 +42,9 @@ class ToolExecutor:
             elif tool_name == "get_user_stats":
                 return await self._get_user_stats(tool_args, user_id)
             
+            elif tool_name == "get_user_workout_history":
+                return await self._get_user_workout_history(tool_args, user_id)
+            
             else:
                 return {"error": f"Unknown tool: {tool_name}"}
         
@@ -88,6 +91,28 @@ class ToolExecutor:
         return {
             "tool": "get_user_stats",
             "stats": stats
+        }
+    
+    async def _get_user_workout_history(self, args: Dict, user_id: int) -> Dict:
+        """Execute get_user_workout_history tool"""
+        from datetime import datetime, timedelta
+        
+        days = min(args.get('days', 30), 180)  # Cap at 180 days
+        limit = min(args.get('limit', 20), 100)  # Cap at 100
+        
+        start_date = datetime.now() - timedelta(days=days)
+        
+        async with BackendAPIClient() as client:
+            workouts = await client.get_user_workouts(
+                user_id=user_id,
+                start_date=start_date,
+                limit=limit
+            )
+        
+        return {
+            "tool": "get_user_workout_history",
+            "workouts": workouts,
+            "count": len(workouts)
         }
     
     async def execute_multiple(

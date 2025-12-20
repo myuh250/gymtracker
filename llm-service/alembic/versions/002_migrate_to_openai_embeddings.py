@@ -30,12 +30,13 @@ def upgrade() -> None:
     Upgrade schema to use 1536-dimensional vectors (OpenAI embeddings).
     
     Steps:
-    1. Drop existing tables (exercise_embeddings, workout_embeddings)
+    1. Drop existing tables (exercise_embeddings, workout_log_embeddings)
     2. Recreate with new vector dimension (1536)
     """
     # Drop existing tables (cascades will handle foreign keys if any)
-    op.execute('DROP TABLE IF EXISTS workout_embeddings CASCADE')
+    op.execute('DROP TABLE IF EXISTS workout_log_embeddings CASCADE')
     op.execute('DROP TABLE IF EXISTS exercise_embeddings CASCADE')
+    op.execute('DROP TABLE IF EXISTS knowledge_base CASCADE')
     
     # Recreate exercise_embeddings with 1536 dimensions
     op.create_table(
@@ -55,9 +56,9 @@ def upgrade() -> None:
     # Create indexes for exercise_embeddings
     op.create_index('idx_exercise_embeddings_muscle_group', 'exercise_embeddings', ['muscle_group'], unique=False)
     
-    # Recreate workout_embeddings with 1536 dimensions
+    # Recreate workout_log_embeddings with 1536 dimensions
     op.create_table(
-        'workout_embeddings',
+        'workout_log_embeddings',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('workout_log_id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
@@ -70,9 +71,15 @@ def upgrade() -> None:
         sa.UniqueConstraint('workout_log_id')
     )
     
-    # Create indexes for workout_embeddings
-    op.create_index('idx_workout_embeddings_user_id', 'workout_embeddings', ['user_id'], unique=False)
-    op.create_index('idx_workout_embeddings_workout_date', 'workout_embeddings', ['workout_date'], unique=False)
+    # Create indexes for workout_log_embeddings
+    op.create_index('idx_workout_embeddings_user_id', 'workout_log_embeddings', ['user_id'], unique=False)
+    op.create_index('idx_workout_embeddings_workout_date', 'workout_log_embeddings', ['workout_date'], unique=False)
+    
+    # Create vector index for fast similarity search
+    op.execute(
+        'CREATE INDEX idx_workout_log_embeddings_vector ON workout_log_embeddings '
+        'USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)'
+    )
     
     print("\n✅ Migration complete!")
     print("⚠️  WARNING: All RAG data has been deleted.")
@@ -86,7 +93,7 @@ def downgrade() -> None:
     This is a destructive operation that will also delete all data.
     """
     # Drop existing tables
-    op.drop_table('workout_embeddings')
+    op.drop_table('workout_log_embeddings')
     op.drop_table('exercise_embeddings')
     
     # Recreate with 768 dimensions (Gemini)
@@ -107,7 +114,7 @@ def downgrade() -> None:
     op.create_index('idx_exercise_embeddings_muscle_group', 'exercise_embeddings', ['muscle_group'], unique=False)
     
     op.create_table(
-        'workout_embeddings',
+        'workout_log_embeddings',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('workout_log_id', sa.Integer(), nullable=False),
         sa.Column('user_id', sa.Integer(), nullable=False),
@@ -119,6 +126,6 @@ def downgrade() -> None:
         sa.PrimaryKeyConstraint('id')
     )
     
-    op.create_index('idx_workout_embeddings_workout_log_id', 'workout_embeddings', ['workout_log_id'], unique=False)
-    op.create_index('idx_workout_embeddings_user_id', 'workout_embeddings', ['user_id'], unique=False)
-    op.create_index('idx_workout_embeddings_workout_date', 'workout_embeddings', ['workout_date'], unique=False)
+    op.create_index('idx_workout_embeddings_workout_log_id', 'workout_log_embeddings', ['workout_log_id'], unique=False)
+    op.create_index('idx_workout_embeddings_user_id', 'workout_log_embeddings', ['user_id'], unique=False)
+    op.create_index('idx_workout_embeddings_workout_date', 'workout_log_embeddings', ['workout_date'], unique=False)
