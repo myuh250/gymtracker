@@ -15,7 +15,6 @@ export default function UserProfileModal({ user, open, onClose }) {
     >
       <Descriptions bordered column={1}>
         <Descriptions.Item label="ID">{user.id}</Descriptions.Item>
-        <Descriptions.Item label="Username">{user.username}</Descriptions.Item>
         <Descriptions.Item label="Email">{user.email}</Descriptions.Item>
         <Descriptions.Item label="Họ tên">{user.fullName}</Descriptions.Item>
         <Descriptions.Item label="Role">
@@ -24,15 +23,22 @@ export default function UserProfileModal({ user, open, onClose }) {
           </Tag>
         </Descriptions.Item>
         <Descriptions.Item label="Trạng thái">
-          <Tag color={user.isBlocked ? "red" : "green"}>
-            {user.isBlocked ? "Đã chặn" : "Hoạt động"}
+          <Tag color={user.isEnabled ? "green" : "red"}>
+            {user.isEnabled ? "Hoạt động" : "Đã chặn"}
           </Tag>
+        </Descriptions.Item>
+        <Descriptions.Item label="OAuth">
+          {user.isOauth ? (
+            <Tag color="blue">{user.oauthProvider}</Tag>
+          ) : (
+            <Tag>Email/Password</Tag>
+          )}
         </Descriptions.Item>
         <Descriptions.Item label="Ngày tạo">
           {dayjs(user.createdAt).format("DD/MM/YYYY HH:mm")}
         </Descriptions.Item>
-        <Descriptions.Item label="Lần đăng nhập cuối">
-          {dayjs(user.lastLogin).format("DD/MM/YYYY HH:mm")}
+        <Descriptions.Item label="Cập nhật lần cuối">
+          {dayjs(user.updatedAt).format("DD/MM/YYYY HH:mm")}
         </Descriptions.Item>
       </Descriptions>
     </Modal>
