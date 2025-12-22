@@ -15,12 +15,14 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
+    "@stomp/stompjs": "^7.0.0",
     "antd": "^6.1.0",
     "axios": "^1.13.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-markdown": "^10.1.0",
-    "react-router-dom": "^7.10.1"
+    "react-router-dom": "^7.10.1",
+    "sockjs-client": "^1.6.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

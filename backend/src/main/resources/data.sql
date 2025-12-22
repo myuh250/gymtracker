@@ -8,34 +8,36 @@
 -- ============================================
 -- 0. CLEAN UP EXISTING DATA (Optional - uncomment if needed)
 -- ============================================
--- SET FOREIGN_KEY_CHECKS = 0;
--- TRUNCATE TABLE exercise_sets;
--- TRUNCATE TABLE workout_logs;
--- TRUNCATE TABLE exercises;
--- TRUNCATE TABLE service_account_scopes;
--- TRUNCATE TABLE service_accounts;
--- TRUNCATE TABLE users;
--- SET FOREIGN_KEY_CHECKS = 1;
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE exercise_sets;
+TRUNCATE TABLE workout_logs;
+TRUNCATE TABLE exercises;
+TRUNCATE TABLE service_account_scopes;
+TRUNCATE TABLE service_accounts;
+TRUNCATE TABLE users;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
 -- 1. USERS DATA
 -- ============================================
 -- Password for all sample users: "password123" (hashed with BCrypt)
 -- Note: In production, use proper password hashing through your service layer
-INSERT INTO users (email, password_hash, full_name, role, is_enabled, is_oauth, oauth_provider, oauth_id, avatar_url, created_at, updated_at) 
+-- INSERT IGNORE: Skip if email already exists (won't overwrite existing data)
+INSERT IGNORE INTO users (email, password_hash, full_name, role, is_enabled, is_oauth, oauth_provider, oauth_id, avatar_url, created_at, updated_at) 
 VALUES 
-    ('admin@gymtracker.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Admin User', 'ROLE_ADMIN', true, false, NULL, NULL, NULL, NOW(), NOW()),
-    ('john.doe@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'John Doe', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=1', NOW(), NOW()),
-    ('jane.smith@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Jane Smith', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=2', NOW(), NOW()),
-    ('mike.wilson@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Mike Wilson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=3', NOW(), NOW()),
-    ('sarah.johnson@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Sarah Johnson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=4', NOW(), NOW()),
+    ('admin@gymtracker.com', '$2a$10$vBTTUa71ueqg770/7DVbQepv6AOFH8oo7hCEjFPqps0.4OxDS2NDC', 'Admin User', 'ROLE_ADMIN', true, false, NULL, NULL, NULL, NOW(), NOW()),
+    ('john.doe@example.com', '$2a$10$vBTTUa71ueqg770/7DVbQepv6AOFH8oo7hCEjFPqps0.4OxDS2NDC', 'John Doe', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=1', NOW(), NOW()),
+    ('jane.smith@example.com', '$2a$10$vBTTUa71ueqg770/7DVbQepv6AOFH8oo7hCEjFPqps0.4OxDS2NDC', 'Jane Smith', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=2', NOW(), NOW()),
+    ('mike.wilson@example.com', '$2a$10$vBTTUa71ueqg770/7DVbQepv6AOFH8oo7hCEjFPqps0.4OxDS2NDC', 'Mike Wilson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=3', NOW(), NOW()),
+    ('sarah.johnson@example.com', '$2a$10$vBTTUa71ueqg770/7DVbQepv6AOFH8oo7hCEjFPqps0.4OxDS2NDC', 'Sarah Johnson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=4', NOW(), NOW()),
     ('google.user@gmail.com', NULL, 'Google OAuth User', 'ROLE_USER', true, true, 'google', '123456789', 'https://i.pravatar.cc/150?img=5', NOW(), NOW());
 
 -- ============================================
 -- 2. EXERCISES DATA
 -- ============================================
+-- INSERT IGNORE: Skip if exercise already exists (won't overwrite existing data)
 -- Chest Exercises
-INSERT INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at) 
+INSERT IGNORE INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at) 
 VALUES 
     ('Bench Press', 'Chest', 'Classic barbell bench press for chest development. Lie on bench, lower bar to chest, press up.', false, NULL, NOW(), NOW()),
     ('Incline Dumbbell Press', 'Chest', 'Targets upper chest with dumbbells on incline bench (30-45 degrees).', false, NULL, NOW(), NOW()),
@@ -44,7 +46,7 @@ VALUES
     ('Dumbbell Pullover', 'Chest', 'Works both chest and lats. Lie perpendicular on bench with dumbbell.', false, NULL, NOW(), NOW());
 
 -- Back Exercises
-INSERT INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
+INSERT IGNORE INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
 VALUES
     ('Pull-ups', 'Back', 'Bodyweight exercise for back and biceps. Grip bar, pull chin over bar.', false, NULL, NOW(), NOW()),
     ('Barbell Row', 'Back', 'Compound movement for back thickness. Bend at hips, pull bar to lower chest.', false, NULL, NOW(), NOW()),
@@ -54,7 +56,7 @@ VALUES
     ('T-Bar Row', 'Back', 'Compound row variation. Great for back thickness and strength.', false, NULL, NOW(), NOW());
 
 -- Shoulder Exercises
-INSERT INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
+INSERT IGNORE INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
 VALUES
     ('Overhead Press', 'Shoulders', 'Standing or seated barbell/dumbbell press. Press weight overhead.', false, NULL, NOW(), NOW()),
     ('Lateral Raise', 'Shoulders', 'Isolation exercise for side delts. Raise dumbbells to shoulder height.', false, NULL, NOW(), NOW()),
@@ -63,7 +65,7 @@ VALUES
     ('Arnold Press', 'Shoulders', 'Rotating dumbbell press. Named after Arnold Schwarzenegger.', false, NULL, NOW(), NOW());
 
 -- Leg Exercises
-INSERT INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
+INSERT IGNORE INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
 VALUES
     ('Squat', 'Legs', 'King of leg exercises, targets quads, glutes, and hamstrings.', false, NULL, NOW(), NOW()),
     ('Leg Press', 'Legs', 'Machine exercise for overall leg development. Safe alternative to squats.', false, NULL, NOW(), NOW()),
@@ -74,7 +76,7 @@ VALUES
     ('Bulgarian Split Squat', 'Legs', 'Unilateral leg exercise. Rear foot elevated, front leg does the work.', false, NULL, NOW(), NOW());
 
 -- Arm Exercises
-INSERT INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
+INSERT IGNORE INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
 VALUES
     ('Barbell Curl', 'Biceps', 'Classic bicep exercise with barbell. Curl bar up, squeeze biceps.', false, NULL, NOW(), NOW()),
     ('Hammer Curl', 'Biceps', 'Dumbbell curl with neutral grip. Targets brachialis and biceps.', false, NULL, NOW(), NOW()),
@@ -85,7 +87,7 @@ VALUES
     ('Skull Crusher', 'Triceps', 'Lying tricep extension. Lower bar to forehead, extend arms.', false, NULL, NOW(), NOW());
 
 -- Core Exercises
-INSERT INTO exercises (name, muscle_group, description, is_custom, created_at, updated_at)
+INSERT IGNORE INTO exercises (name, muscle_group, description, is_custom, created_at, updated_at)
 VALUES
     ('Plank', 'Core', 'Isometric core exercise. Hold push-up position on forearms.', false, NOW(), NOW()),
     ('Crunches', 'Core', 'Classic abdominal exercise. Lie down, lift shoulders off ground.', false, NOW(), NOW()),
@@ -95,7 +97,7 @@ VALUES
     ('Dead Bug', 'Core', 'Core stability exercise. Lie on back, alternate opposite arm and leg.', false, NOW(), NOW());
 
 -- Custom Exercises (created by users)
-INSERT INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
+INSERT IGNORE INTO exercises (name, muscle_group, description, is_custom, created_by_user_id, created_at, updated_at)
 VALUES
     ('Johns Special Superset', 'Chest', 'My custom chest superset: bench press followed immediately by push-ups', true, 2, NOW(), NOW()),
     ('Cable Crossover High', 'Chest', 'High cable crossover for lower chest', true, 2, NOW(), NOW());
@@ -103,8 +105,10 @@ VALUES
 -- ============================================
 -- 3. WORKOUT LOGS DATA
 -- ============================================
+-- INSERT IGNORE: Skip if log already exists (won't overwrite existing data)
+-- Note: This assumes workout logs have unique constraints or will use auto-increment IDs
 -- John Doe's workouts (User ID: 2)
-INSERT INTO workout_logs (user_id, log_date, notes, is_completed, total_duration_minutes, created_at, updated_at)
+INSERT IGNORE INTO workout_logs (user_id, log_date, notes, is_completed, total_duration_minutes, created_at, updated_at)
 VALUES
     -- Recent workouts
     (2, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), 'Great chest and triceps workout! Feeling strong.', true, 65, NOW(), NOW()),
@@ -118,7 +122,7 @@ VALUES
     (2, DATE_SUB(CURRENT_DATE, INTERVAL 16 DAY), 'Back and biceps', true, 60, NOW(), NOW());
 
 -- Jane Smith's workouts (User ID: 3)
-INSERT INTO workout_logs (user_id, log_date, notes, is_completed, total_duration_minutes, created_at, updated_at)
+INSERT IGNORE INTO workout_logs (user_id, log_date, notes, is_completed, total_duration_minutes, created_at, updated_at)
 VALUES
     (3, DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY), 'Full body circuit training', true, 55, NOW(), NOW()),
     (3, DATE_SUB(CURRENT_DATE, INTERVAL 3 DAY), 'Legs and glutes focus', true, 60, NOW(), NOW()),
@@ -127,7 +131,7 @@ VALUES
     (3, DATE_SUB(CURRENT_DATE, INTERVAL 10 DAY), 'Leg day with lunges', true, 55, NOW(), NOW());
 
 -- Mike Wilson's workouts (User ID: 4)
-INSERT INTO workout_logs (user_id, log_date, notes, is_completed, total_duration_minutes, created_at, updated_at)
+INSERT IGNORE INTO workout_logs (user_id, log_date, notes, is_completed, total_duration_minutes, created_at, updated_at)
 VALUES
     (4, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), 'Push day - chest, shoulders, triceps', true, 70, NOW(), NOW()),
     (4, DATE_SUB(CURRENT_DATE, INTERVAL 4 DAY), 'Pull day - back and biceps', true, 65, NOW(), NOW()),
@@ -135,7 +139,7 @@ VALUES
     (4, DATE_SUB(CURRENT_DATE, INTERVAL 9 DAY), 'Push day again', true, 70, NOW(), NOW());
 
 -- Sarah Johnson's workouts (User ID: 5)
-INSERT INTO workout_logs (user_id, log_date, notes, is_completed, total_duration_minutes, created_at, updated_at)
+INSERT IGNORE INTO workout_logs (user_id, log_date, notes, is_completed, total_duration_minutes, created_at, updated_at)
 VALUES
     (5, CURRENT_DATE, 'Morning workout - feeling energized!', false, NULL, NOW(), NOW()),
     (5, DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY), 'Yoga and core strength', true, 45, NOW(), NOW()),
@@ -145,8 +149,10 @@ VALUES
 -- ============================================
 -- 4. EXERCISE SETS DATA
 -- ============================================
+-- INSERT IGNORE: Skip if set already exists (won't overwrite existing data)
+-- Note: Exercise sets use auto-increment IDs, so duplicates will be skipped
 -- John Doe's most recent workout (Chest & Triceps - Log ID: 1)
-INSERT INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
+INSERT IGNORE INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
 VALUES
     -- Bench Press - 4 sets
     (1, 1, 1, 10, 60.0, true, 'Warm up set', 90, NOW(), NOW()),
@@ -171,7 +177,7 @@ VALUES
     (1, 27, 3, 8, 10.0, true, NULL, 90, NOW(), NOW());
 
 -- John Doe's Back workout (Log ID: 2)
-INSERT INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
+INSERT IGNORE INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
 VALUES
     -- Deadlift - 5 sets
     (2, 9, 1, 8, 100.0, true, 'Warm up', 120, NOW(), NOW()),
@@ -195,7 +201,7 @@ VALUES
     (2, 10, 3, 10, 60.0, true, NULL, 60, NOW(), NOW());
 
 -- John Doe's Leg workout (Log ID: 3)
-INSERT INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
+INSERT IGNORE INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
 VALUES
     -- Squat - 5 sets
     (3, 17, 1, 10, 60.0, true, 'Warm up', 120, NOW(), NOW()),
@@ -223,7 +229,7 @@ VALUES
     (3, 21, 4, 12, 100.0, true, 'Burning!', 60, NOW(), NOW());
 
 -- Jane Smith's Full Body workout (Log ID: 9)
-INSERT INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
+INSERT IGNORE INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
 VALUES
     -- Squat - 3 sets
     (9, 17, 1, 12, 40.0, true, NULL, 90, NOW(), NOW()),
@@ -243,7 +249,7 @@ VALUES
     (9, 31, 3, 60, 0.0, true, 'New record!', 60, NOW(), NOW());
 
 -- Mike Wilson's Push Day (Log ID: 14)
-INSERT INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
+INSERT IGNORE INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
 VALUES
     -- Bench Press - 4 sets
     (14, 1, 1, 10, 70.0, true, NULL, 120, NOW(), NOW()),
@@ -265,7 +271,7 @@ VALUES
     (14, 28, 3, 10, 27.5, true, NULL, 60, NOW(), NOW());
 
 -- Sarah Johnson's current workout (Log ID: 18) - Not completed yet
-INSERT INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
+INSERT IGNORE INTO exercise_sets (log_id, exercise_id, set_number, reps, weight, is_completed, notes, rest_time_seconds, created_at, updated_at)
 VALUES
     -- Squat - 3 sets (only 2 completed)
     (18, 17, 1, 10, 35.0, true, NULL, 90, NOW(), NOW()),
@@ -277,6 +283,23 @@ VALUES
     (18, 22, 3, 0, 45.0, false, 'Planned', 90, NOW(), NOW());
 
 -- ============================================
+-- 5. SERVICE ACCOUNTS DATA
+-- ============================================
+-- Service accounts for inter-service authentication
+-- Password: llm-service-secret-dev-2024 (hashed with BCrypt)
+INSERT IGNORE INTO service_accounts (service_name, client_id, client_secret_hash, is_active, created_at, updated_at)
+VALUES
+    ('LLM Service', 'llm-service', '$2a$10$ATMIDXKXmRvXkL2NqiDowed0cv49k3fKzR.r2s2kwBvuvZfr/odtO', true, NOW(), NOW());
+
+-- Service Account Scopes
+INSERT IGNORE INTO service_account_scopes (service_account_id, scope)
+SELECT id, 'RAG_READ' FROM service_accounts WHERE client_id = 'llm-service'
+UNION ALL
+SELECT id, 'RAG_SYNC' FROM service_accounts WHERE client_id = 'llm-service'
+UNION ALL
+SELECT id, 'HEALTH_CHECK' FROM service_accounts WHERE client_id = 'llm-service';
+
+-- ============================================
 -- END OF SAMPLE DATA
 -- ============================================
 -- Summary:
@@ -284,5 +307,5 @@ VALUES
 -- - 41 Exercises (39 default + 2 custom)
 -- - 18 Workout Logs (various dates and completion status)
 -- - 100+ Exercise Sets (with realistic weights and reps)
--- - 3 Service Accounts (with appropriate scopes)
+-- - 1 Service Accounts (with appropriate scopes)
 -- ============================================

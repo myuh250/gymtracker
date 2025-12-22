@@ -8,6 +8,7 @@ import {
 } from "@ant-design/icons";
 import { useAuth } from "../contexts/AuthContext";
 import UserManagement from "../components/admin/UserManagement";
+import AdminNotification from "../components/admin/AdminNotification";
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
