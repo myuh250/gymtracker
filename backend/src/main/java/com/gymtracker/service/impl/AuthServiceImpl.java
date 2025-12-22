@@ -33,7 +33,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already in use");
+            throw new RuntimeException("Email đã được sử dụng");
         }
 
         User user = new User();
@@ -63,15 +63,28 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            throw new RuntimeException("Sai tài khoản hoặc mật khẩu");
+        } catch (org.springframework.security.authentication.DisabledException e) {
+            throw new RuntimeException("Tài khoản đã bị chặn. Vui lòng liên hệ với admin");
+        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException e) {
+            throw new RuntimeException(e.getMessage());
+        }
 
         var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+
+        // Double check if user is enabled
+        if (!user.getIsEnabled()) {
+            throw new RuntimeException("Tài khoản đã bị chặn. Vui lòng liên hệ với admin");
+        }
 
         var userDetails = new org.springframework.security.core.userdetails.User(
                 user.getEmail(),

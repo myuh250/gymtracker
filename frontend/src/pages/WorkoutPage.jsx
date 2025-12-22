@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Typography, Divider } from "antd";
+import { Layout, Typography, Divider, message } from "antd";
 import WorkoutBuilder from "../components/WorkoutBuilder";
 import WorkoutList from "../components/WorkoutList";
 import {
@@ -9,7 +9,7 @@ import {
   updateWorkout,
   removeWorkout,
   toggleWorkoutCompleted,
-  toggleExerciseCompleted,
+  toggleSetCompleted,
 } from "../utils/storage";
 
 const { Content } = Layout;
@@ -19,41 +19,93 @@ export default function WorkoutPage() {
   const [workouts, setWorkouts] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [editingWorkout, setEditingWorkout] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setExercises(getExercises());
-    setWorkouts(getWorkouts());
+    loadData();
   }, []);
 
-  const handleCreateWorkout = (newWorkoutPayload) => {
-    if (editingWorkout) {
-      // Update mode
-      updateWorkout({ ...newWorkoutPayload, id: editingWorkout.id });
-      setEditingWorkout(null);
-    } else {
-      // Create mode
-      addWorkout(newWorkoutPayload);
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [exercisesData, workoutsData] = await Promise.all([
+        getExercises(),
+        getWorkouts(),
+      ]);
+      setExercises(exercisesData);
+      setWorkouts(workoutsData);
+    } catch (error) {
+      message.error("Không thể tải dữ liệu");
+    } finally {
+      setLoading(false);
     }
-    setWorkouts(getWorkouts());
   };
 
-  const handleToggleComplete = (workoutId) => {
-    toggleWorkoutCompleted(workoutId);
-    setWorkouts(getWorkouts());
+  const handleCreateWorkout = async (newWorkoutPayload) => {
+    try {
+      if (editingWorkout) {
+        // Update mode
+        await updateWorkout({ ...newWorkoutPayload, id: editingWorkout.id });
+        message.success("Buổi tập đã được cập nhật");
+        setEditingWorkout(null);
+      } else {
+        // Create mode - Check duplicate date first
+        const existingWorkout = workouts.find(
+          (w) => w.logDate === newWorkoutPayload.logDate
+        );
+        if (existingWorkout) {
+          message.error(
+            `Đã có buổi tập cho ngày ${newWorkoutPayload.logDate}. Vui lòng chọn ngày khác hoặc chỉnh sửa buổi tập hiện có.`
+          );
+          throw new Error("Duplicate workout date");
+        }
+        await addWorkout(newWorkoutPayload);
+        message.success("Buổi tập đã được tạo");
+      }
+      await loadData();
+    } catch (error) {
+      // Parse backend error message for duplicate date
+      const errorMsg = error?.message || "";
+      if (errorMsg.includes("already exists")) {
+        message.error("Đã có buổi tập cho ngày này. Vui lòng chọn ngày khác.");
+      } else if (errorMsg !== "Duplicate workout date") {
+        // Don't show error message again for duplicate (already shown above)
+        message.error("Lưu buổi tập thất bại: " + errorMsg);
+      }
+      throw error; // Re-throw to let WorkoutBuilder know it failed
+    }
   };
 
-  const handleToggleExerciseComplete = (workoutId, exerciseId) => {
-    toggleExerciseCompleted(workoutId, exerciseId);
-    setWorkouts(getWorkouts());
+  const handleToggleComplete = async (workoutId) => {
+    try {
+      await toggleWorkoutCompleted(workoutId);
+      await loadData();
+    } catch (error) {
+      message.error("Cập nhật trạng thái thất bại");
+    }
+  };
+
+  const handleToggleSetComplete = async (workoutId, setId) => {
+    try {
+      await toggleSetCompleted(workoutId, setId);
+      await loadData();
+    } catch (error) {
+      message.error("Cập nhật set thất bại");
+    }
   };
 
   const handleEditWorkout = (workout) => {
     setEditingWorkout(workout);
   };
 
-  const handleDeleteWorkout = (workoutId) => {
-    removeWorkout(workoutId);
-    setWorkouts(getWorkouts());
+  const handleDeleteWorkout = async (workoutId) => {
+    try {
+      await removeWorkout(workoutId);
+      await loadData();
+      message.success("Đã xóa buổi tập");
+    } catch (error) {
+      message.error("Xóa buổi tập thất bại");
+    }
   };
 
   return (
@@ -80,6 +132,7 @@ export default function WorkoutPage() {
           {/* Nút tạo nằm trong Component Builder */}
           <WorkoutBuilder
             exercises={exercises}
+            workouts={workouts}
             onCreate={handleCreateWorkout}
             editingWorkout={editingWorkout}
             onCancelEdit={() => setEditingWorkout(null)}
@@ -93,7 +146,7 @@ export default function WorkoutPage() {
           workouts={workouts}
           exercises={exercises}
           onToggleComplete={handleToggleComplete}
-          onToggleExerciseComplete={handleToggleExerciseComplete}
+          onToggleSetComplete={handleToggleSetComplete}
           onEdit={handleEditWorkout}
           onDelete={handleDeleteWorkout}
         />

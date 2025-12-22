@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Form, Input, Button, Card, Typography, message } from "antd";
 import { UserOutlined, LockOutlined, MailOutlined } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
+import { register as registerAPI } from "../services/authService";
 
 const { Title, Text } = Typography;
 
@@ -11,17 +12,27 @@ export default function RegisterPage() {
   // Hook để thao tác với form (reset, validate...)
   const [form] = Form.useForm();
 
-  const onFinish = (values) => {
-    // values = { username, email, password, confirm }
-    console.log("Register values:", values);
+  const onFinish = async (values) => {
     setLoading(true);
 
-    // --- MOCK API REGISTER ---
-    setTimeout(() => {
+    try {
+      // Call real API - Backend expects { fullName, email, password }
+      await registerAPI({
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+      });
+
       message.success("Đăng ký tài khoản thành công!");
-      setLoading(false);
       navigate("/login");
-    }, 1500);
+    } catch (error) {
+      console.error("Register error:", error);
+      const errorMsg =
+        error.response?.data?.message || error.message || "Đăng ký thất bại";
+      message.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,18 +57,18 @@ export default function RegisterPage() {
           onFinish={onFinish}
           scrollToFirstError
         >
-          {/* USERNAME */}
+          {/* FULL NAME */}
           <Form.Item
-            name="username"
-            label="Tên đăng nhập"
+            name="fullName"
+            label="Họ và tên"
             rules={[
-              { required: true, message: "Vui lòng nhập tên đăng nhập!" },
-              { min: 4, message: "Tên đăng nhập phải có ít nhất 4 ký tự!" },
+              { required: true, message: "Vui lòng nhập họ và tên!" },
+              { min: 2, message: "Họ và tên phải có ít nhất 2 ký tự!" },
             ]}
           >
             <Input
               prefix={<UserOutlined />}
-              placeholder="Ví dụ: user123"
+              placeholder="Ví dụ: Nguyễn Văn A"
               size="large"
             />
           </Form.Item>

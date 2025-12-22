@@ -4,6 +4,7 @@ import { SearchOutlined } from "@ant-design/icons";
 import ExerciseCard from "./ExerciseCard";
 import ExerciseFormModal from "./ExerciseFormModal";
 import ExerciseCreate from "./ExerciseCreate";
+import { uploadExerciseMedia } from "../services/fileUploadService";
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -26,6 +27,7 @@ export default function ExerciseList({
 }) {
   const [searchText, setSearchText] = useState("");
   const [filterType, setFilterType] = useState(null);
+  const [uploading, setUploading] = useState(false);
   const [modalState, setModalState] = useState({ open: false, item: null });
 
   // Tối ưu filter bằng useMemo
@@ -50,26 +52,38 @@ export default function ExerciseList({
   );
 
   const handleSubmit = useCallback(
-    (values, file) => {
+    async (values, file) => {
       const { item } = modalState;
-      const mediaUrl = file ? URL.createObjectURL(file) : item?.mediaUrl;
 
-      const resultItem = {
-        ...(item || {}),
-        ...values,
-        mediaUrl,
-        mediaFile: file,
-        id: item ? item.id : Date.now(),
-      };
+      try {
+        setUploading(true);
+        let mediaUrl = item?.mediaUrl; // Keep existing URL
 
-      if (item) {
-        onEdit(resultItem);
-        message.success("Đã cập nhật!");
-      } else {
-        onAdd(resultItem);
-        message.success("Đã thêm mới!");
+        // Upload new file if provided
+        if (file) {
+          mediaUrl = await uploadExerciseMedia(file);
+        }
+
+        const resultItem = {
+          ...(item || {}),
+          ...values,
+          mediaUrl,
+          id: item ? item.id : Date.now(),
+        };
+
+        if (item) {
+          await onEdit(resultItem);
+          message.success("Đã cập nhật!");
+        } else {
+          await onAdd(resultItem);
+          message.success("Đã thêm mới!");
+        }
+        setModalState({ open: false, item: null });
+      } catch (error) {
+        message.error("Lỗi: " + error.message);
+      } finally {
+        setUploading(false);
       }
-      setModalState({ open: false, item: null });
     },
     [modalState, onEdit, onAdd]
   );
@@ -168,6 +182,7 @@ export default function ExerciseList({
         initialValues={modalState.item}
         onCancel={handleCloseModal}
         onSubmit={handleSubmit}
+        loading={uploading}
       />
     </div>
   );

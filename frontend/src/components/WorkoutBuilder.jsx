@@ -4,21 +4,21 @@ import {
   Button,
   Select,
   DatePicker,
-  InputNumber,
   message,
-  Card,
   Space,
   Typography,
   Divider,
 } from "antd";
-import { PlusOutlined, DeleteOutlined, EditOutlined } from "@ant-design/icons";
+import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import ExerciseSessionCard from "./ExerciseSessionCard";
 
 const { Option } = Select;
 const { Text } = Typography;
 
 export default function WorkoutBuilder({
   exercises = [],
+  workouts = [],
   onCreate,
   editingWorkout = null,
   onCancelEdit,
@@ -26,7 +26,22 @@ export default function WorkoutBuilder({
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(dayjs());
   const [selectedExerciseId, setSelectedExerciseId] = useState(null);
+  const [filterMuscleGroup, setFilterMuscleGroup] = useState(null);
   const [sessionExercises, setSessionExercises] = useState([]);
+
+  // Lấy danh sách muscle groups có trong exercises
+  const availableMuscleGroups = React.useMemo(() => {
+    const groups = new Set(
+      exercises.map((ex) => ex.muscleGroup).filter(Boolean)
+    );
+    return Array.from(groups).sort();
+  }, [exercises]);
+
+  // Filter exercises theo muscle group
+  const filteredExercises = React.useMemo(() => {
+    if (!filterMuscleGroup) return exercises;
+    return exercises.filter((ex) => ex.muscleGroup === filterMuscleGroup);
+  }, [exercises, filterMuscleGroup]);
 
   // When editingWorkout changes, open modal and populate form
   useEffect(() => {
@@ -51,9 +66,13 @@ export default function WorkoutBuilder({
           exerciseId: Number(exId),
           name: exercise ? exercise.name : `Exercise ${exId}`,
           sets: sets.map((s) => ({
+            id: s.id || Date.now() + Math.random(),
             setNumber: s.setNumber,
             reps: s.reps,
             weight: s.weight,
+            isCompleted: s.isCompleted || false,
+            notes: s.notes || "",
+            restTimeSeconds: s.restTimeSeconds || 60,
           })),
         };
       });
@@ -72,21 +91,25 @@ export default function WorkoutBuilder({
         id: Date.now() + Math.random(),
         exerciseId: found.id,
         name: found.name,
-        sets: [{ setNumber: 1, reps: 8, weight: 0 }],
+        sets: [
+          {
+            id: Date.now() + Math.random(),
+            setNumber: 1,
+            reps: 8,
+            weight: 0,
+            isCompleted: false,
+            notes: "",
+            restTimeSeconds: 60,
+          },
+        ],
       },
     ]);
     setSelectedExerciseId(null);
   };
 
-  const updateSet = (sessionId, setIndex, key, value) => {
+  const updateSet = (sessionId, newSets) => {
     setSessionExercises((s) =>
-      s.map((se) => {
-        if (se.id !== sessionId) return se;
-        const sets = se.sets.map((st, idx) =>
-          idx === setIndex ? { ...st, [key]: value } : st
-        );
-        return { ...se, sets };
-      })
+      s.map((se) => (se.id === sessionId ? { ...se, sets: newSets } : se))
     );
   };
 
@@ -98,7 +121,15 @@ export default function WorkoutBuilder({
               ...se,
               sets: [
                 ...se.sets,
-                { setNumber: se.sets.length + 1, reps: 8, weight: 0 },
+                {
+                  id: Date.now() + Math.random(),
+                  setNumber: se.sets.length + 1,
+                  reps: 8,
+                  weight: 0,
+                  isCompleted: false,
+                  notes: "",
+                  restTimeSeconds: 60,
+                },
               ],
             }
           : se
@@ -110,37 +141,44 @@ export default function WorkoutBuilder({
     setSessionExercises((s) => s.filter((se) => se.id !== sessionId));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!sessionExercises.length)
       return message.warn("Thêm ít nhất 1 bài tập vào buổi tập");
     const payload = {
       logDate: date.format("YYYY-MM-DD"),
       notes: "(mock)",
       isCompleted: editingWorkout ? editingWorkout.isCompleted : false,
-      completedExercises: editingWorkout
-        ? editingWorkout.completedExercises
-        : [],
       totalDurationMinutes: 0,
       sets: sessionExercises.flatMap((se) =>
         se.sets.map((st) => ({
+          id: st.id,
           exerciseId: se.exerciseId,
           setNumber: st.setNumber,
           reps: st.reps,
           weight: st.weight,
+          isCompleted: st.isCompleted || false,
+          notes: st.notes || "",
+          restTimeSeconds: st.restTimeSeconds || 60,
         }))
       ),
     };
-    if (onCreate) onCreate(payload);
-    message.success(
-      editingWorkout ? "Buổi tập đã được cập nhật" : "Buổi tập đã được lập"
-    );
-    handleClose();
+
+    try {
+      // Wait for onCreate to complete - it will show success/error messages
+      if (onCreate) await onCreate(payload);
+      // Only close modal if successful (no error thrown)
+      handleClose();
+    } catch (error) {
+      // Error already handled by onCreate, just don't close modal
+      console.error("Workout creation failed:", error);
+    }
   };
 
   const handleClose = () => {
     setOpen(false);
     setSessionExercises([]);
     setDate(dayjs());
+    setFilterMuscleGroup(null);
     if (editingWorkout && onCancelEdit) {
       onCancelEdit();
     }
@@ -165,15 +203,47 @@ export default function WorkoutBuilder({
         width={800}
       >
         <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
-          <DatePicker value={date} onChange={(d) => setDate(d || dayjs())} />
+          <DatePicker
+            value={date}
+            onChange={(d) => setDate(d || dayjs())}
+            disabledDate={(current) => {
+              // Don't disable when editing current workout
+              if (
+                editingWorkout &&
+                current.format("YYYY-MM-DD") === editingWorkout.logDate
+              ) {
+                return false;
+              }
+              // Disable dates that already have workouts
+              return workouts.some(
+                (w) => w.logDate === current.format("YYYY-MM-DD")
+              );
+            }}
+            format="DD/MM/YYYY"
+          />
           <Select
-            style={{ minWidth: 320 }}
+            style={{ minWidth: 160 }}
+            placeholder="Lọc nhóm cơ"
+            value={filterMuscleGroup}
+            onChange={setFilterMuscleGroup}
+            allowClear
+          >
+            {availableMuscleGroups.map((group) => (
+              <Option key={group} value={group}>
+                {group}
+              </Option>
+            ))}
+          </Select>
+          <Select
+            style={{ minWidth: 280 }}
             placeholder="Chọn bài tập để thêm"
             value={selectedExerciseId}
             onChange={(v) => setSelectedExerciseId(v)}
             allowClear
+            showSearch
+            optionFilterProp="children"
           >
-            {exercises.map((e) => (
+            {filteredExercises.map((e) => (
               <Option key={e.id} value={e.id}>
                 {e.name} — {e.muscleGroup}
               </Option>
@@ -191,63 +261,15 @@ export default function WorkoutBuilder({
             Chưa có bài tập nào trong buổi — thêm từ trên.
           </Text>
         ) : (
-          <Space direction="vertical" style={{ width: "100%" }}>
+          <Space orientation="vertical" style={{ width: "100%" }}>
             {sessionExercises.map((se) => (
-              <Card
+              <ExerciseSessionCard
                 key={se.id}
-                size="small"
-                title={se.name}
-                extra={
-                  <Button
-                    type="text"
-                    danger
-                    icon={<DeleteOutlined />}
-                    onClick={() => removeExercise(se.id)}
-                  />
-                }
-              >
-                {se.sets.map((st, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      alignItems: "center",
-                      marginBottom: 8,
-                    }}
-                  >
-                    <Text style={{ width: 48 }}>Set {st.setNumber}</Text>
-                    <div style={{ display: "flex", gap: 15 }}>
-                      <div>
-                        <Text type="secondary" style={{ marginRight: 10 }}>
-                          Reps{" "}
-                        </Text>
-                        <InputNumber
-                          min={0}
-                          value={st.reps}
-                          onChange={(v) => updateSet(se.id, idx, "reps", v)}
-                        />
-                      </div>
-                      <div>
-                        <Text type="secondary" style={{ marginRight: 10 }}>
-                          Weight{" "}
-                        </Text>
-                        <InputNumber
-                          min={0}
-                          step={0.5}
-                          value={st.weight}
-                          onChange={(v) => updateSet(se.id, idx, "weight", v)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div style={{ textAlign: "right" }}>
-                  <Button size="small" onClick={() => addSetRow(se.id)}>
-                    Thêm set
-                  </Button>
-                </div>
-              </Card>
+                exercise={se}
+                onUpdateSet={updateSet}
+                onAddSet={addSetRow}
+                onRemove={removeExercise}
+              />
             ))}
           </Space>
         )}
