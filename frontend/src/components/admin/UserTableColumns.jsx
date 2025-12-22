@@ -5,6 +5,7 @@ import {
   StopOutlined,
   CheckCircleOutlined,
   EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -12,6 +13,7 @@ export const getUserTableColumns = ({
   onViewProfile,
   onBlockUser,
   onEditUser,
+  onDeleteUser,
 }) => [
   {
     title: "ID",
@@ -60,7 +62,7 @@ export const getUserTableColumns = ({
   {
     title: "Hành động",
     key: "action",
-    width: 240,
+    width: 300,
     render: (_, record) => (
       <Space>
         <Button
@@ -80,28 +82,42 @@ export const getUserTableColumns = ({
           Sửa
         </Button>
         {record.role !== "ROLE_ADMIN" && (
-          <Popconfirm
-            title={record.isEnabled ? "Chặn user?" : "Bỏ chặn user?"}
-            description={
-              record.isEnabled
-                ? `Ngăn ${record.email} đăng nhập?`
-                : `Cho phép ${record.email} truy cập lại?`
-            }
-            onConfirm={() => onBlockUser(record.id)}
-            okText="Xác nhận"
-            cancelText="Hủy"
-          >
-            <Button
-              type="link"
-              danger={record.isEnabled}
-              icon={
-                record.isEnabled ? <StopOutlined /> : <CheckCircleOutlined />
+          <>
+            <Popconfirm
+              title={record.isEnabled ? "Chặn user?" : "Bỏ chặn user?"}
+              description={
+                record.isEnabled
+                  ? `Ngăn ${record.email} đăng nhập?`
+                  : `Cho phép ${record.email} truy cập lại?`
               }
-              size="small"
+              onConfirm={() => onBlockUser(record.id)}
+              okText="Xác nhận"
+              cancelText="Hủy"
             >
-              {record.isEnabled ? "Chặn" : "Bỏ chặn"}
-            </Button>
-          </Popconfirm>
+              <Button
+                type="link"
+                danger={record.isEnabled}
+                icon={
+                  record.isEnabled ? <StopOutlined /> : <CheckCircleOutlined />
+                }
+                size="small"
+              >
+                {record.isEnabled ? "Chặn" : "Bỏ chặn"}
+              </Button>
+            </Popconfirm>
+            <Popconfirm
+              title="Xóa user?"
+              description={`Bạn có chắc muốn xóa ${record.email}? Hành động này không thể hoàn tác!`}
+              onConfirm={() => onDeleteUser(record.id)}
+              okText="Xóa"
+              okType="danger"
+              cancelText="Hủy"
+            >
+              <Button type="link" danger icon={<DeleteOutlined />} size="small">
+                Xóa
+              </Button>
+            </Popconfirm>
+          </>
         )}
       </Space>
     ),
