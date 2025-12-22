@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Layout, Typography, Divider } from "antd";
+import { Layout, Typography, Divider, message } from "antd";
 import WorkoutBuilder from "../components/WorkoutBuilder";
 import WorkoutList from "../components/WorkoutList";
 import {
@@ -49,13 +49,30 @@ export default function WorkoutPage() {
         message.success("Buổi tập đã được cập nhật");
         setEditingWorkout(null);
       } else {
-        // Create mode
+        // Create mode - Check duplicate date first
+        const existingWorkout = workouts.find(
+          (w) => w.logDate === newWorkoutPayload.logDate
+        );
+        if (existingWorkout) {
+          message.error(
+            `Đã có buổi tập cho ngày ${newWorkoutPayload.logDate}. Vui lòng chọn ngày khác hoặc chỉnh sửa buổi tập hiện có.`
+          );
+          throw new Error("Duplicate workout date");
+        }
         await addWorkout(newWorkoutPayload);
         message.success("Buổi tập đã được tạo");
       }
       await loadData();
     } catch (error) {
-      message.error("Lưu buổi tập thất bại");
+      // Parse backend error message for duplicate date
+      const errorMsg = error?.message || "";
+      if (errorMsg.includes("already exists")) {
+        message.error("Đã có buổi tập cho ngày này. Vui lòng chọn ngày khác.");
+      } else if (errorMsg !== "Duplicate workout date") {
+        // Don't show error message again for duplicate (already shown above)
+        message.error("Lưu buổi tập thất bại: " + errorMsg);
+      }
+      throw error; // Re-throw to let WorkoutBuilder know it failed
     }
   };
 
@@ -115,6 +132,7 @@ export default function WorkoutPage() {
           {/* Nút tạo nằm trong Component Builder */}
           <WorkoutBuilder
             exercises={exercises}
+            workouts={workouts}
             onCreate={handleCreateWorkout}
             editingWorkout={editingWorkout}
             onCancelEdit={() => setEditingWorkout(null)}
