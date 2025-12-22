@@ -43,11 +43,11 @@ export default function LoginPage() {
         password: values.password,
       });
 
-      // Backend returns: { token, email, fullName, role }
-      const { token, email, fullName, role } = response;
+      // Backend returns: { token, email, fullName, role, userId }
+      const { token, email, fullName, role, userId } = response;
 
-      // Create user object for AuthContext
-      const user = { email, fullName, role };
+      // Create user object for AuthContext (include userId for RAG/AIChat)
+      const user = { id: userId, email, fullName, role };
 
       // Save to localStorage and AuthContext
       localStorage.setItem("accessToken", token);

@@ -3,12 +3,12 @@ import apiClient, { getErrorMessage } from "../api/axios.customize";
 /**
  * Login with email/password
  * @param {Object} credentials - { email, password }
- * @returns {Promise<{token, email, fullName, role}>}
+ * @returns {Promise<{token, email, fullName, role, userId}>}
  */
 export const login = async (credentials) => {
   try {
     const response = await apiClient.post("/api/auth/login", credentials);
-    // Backend returns: { token, email, fullName, role }
+    // Backend returns: { token, email, fullName, role, userId }
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));

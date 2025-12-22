@@ -1,17 +1,15 @@
-import { llmClient, getErrorMessage } from '../api/axios.customize';
+import { llmClient, getErrorMessage } from "../api/axios.customize";
 
 /**
  * Chat Service - LLM API Integration
- * 
+ *
  * Handles all chat-related API calls to LLM service
  * Architecture: Frontend -> LLM Service -> Backend (for RAG data)
  */
 
 // ====================================
-// Mock User Configuration (Temporary)
+// User & Session Helpers
 // ====================================
-// TODO: Remove when login is implemented
-const MOCK_USER_ID = 2;
 
 const getOrCreateSessionId = () => {
   let sessionId = localStorage.getItem('chatSessionId');
@@ -27,10 +25,30 @@ const getOrCreateSessionId = () => {
   return sessionId;
 };
 
+const getCurrentUserFromStorage = () => {
+  // Reuse the same user object that AuthContext persists in localStorage.
+  const raw = localStorage.getItem("user");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
+    console.error("Failed to parse user from storage in chatService", e);
+    return null;
+  }
+};
+
+const getCurrentUserId = () => {
+  const user = getCurrentUserFromStorage();
+  // Prefer backend user id when available; fall back to null instead of mock.
+  return user && user.id != null ? user.id : null;
+};
+
 const createChatHeaders = (sessionId) => {
+  const userId = getCurrentUserId();
   return {
-    'X-Session-ID': sessionId,
-    'X-User-ID': MOCK_USER_ID.toString(), // TODO: Get from auth context when login is ready
+    "X-Session-ID": sessionId,
+    // X-User-ID allows LLM service to associate chats with the real logged-in user.
+    ...(userId && { "X-User-ID": String(userId) }),
   };
 };
 
@@ -120,3 +138,9 @@ export const checkLLMHealth = async () => {
 export const getCurrentSessionId = () => {
   return localStorage.getItem('chatSessionId');
 };
+
+/**
+ * Expose current chat user for UI (e.g. AIChat header)
+ * without coupling React components to storage details.
+ */
+export const getCurrentChatUser = () => getCurrentUserFromStorage();

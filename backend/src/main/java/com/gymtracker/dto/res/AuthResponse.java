@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AuthResponse {
+    private Long userId;   // Expose user ID so FE can personalize features (e.g. RAG)
     private String token;
     private String email;
     private String fullName;
