@@ -2,3 +2,4 @@
 .cursor/*
 .vscode/*
 docs/backend/docker-compose.yml
+backend/uploads/
