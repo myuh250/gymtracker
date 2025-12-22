@@ -11,11 +11,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.gymtracker.dto.req.ExerciseRequest;
 import com.gymtracker.dto.res.ExerciseResponse;
 import com.gymtracker.service.ExerciseService;
+import com.gymtracker.service.FileStorageService;
 
 import jakarta.validation.Valid;
 
@@ -25,6 +28,9 @@ public class ExerciseController {
 
     @Autowired
     private ExerciseService exerciseService;
+
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @GetMapping
     public ResponseEntity<List<ExerciseResponse>> getAllExercises() {
@@ -50,5 +56,11 @@ public class ExerciseController {
     public ResponseEntity<Void> deleteExercise(@PathVariable Long id) {
         exerciseService.deleteExercise(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/upload-media")
+    public ResponseEntity<String> uploadMedia(@RequestParam("file") MultipartFile file) {
+        String fileUrl = fileStorageService.storeFile(file);
+        return ResponseEntity.ok(fileUrl);
     }
 }
