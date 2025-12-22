@@ -9,6 +9,8 @@ import com.gymtracker.dto.res.WorkoutLogResponse;
 public interface WorkoutLogService {
     WorkoutLogResponse createWorkoutLog(WorkoutLogRequest request);
     List<WorkoutLogResponse> getWorkoutHistory();
+    WorkoutLogResponse getWorkoutById(Long id);
     WorkoutLogResponse getWorkoutLogByDate(LocalDate date);
     WorkoutLogResponse updateWorkoutLog(Long id, WorkoutLogRequest request);
+    void deleteWorkoutLog(Long id);
 }
