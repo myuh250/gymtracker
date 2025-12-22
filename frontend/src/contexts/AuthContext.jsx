@@ -63,6 +63,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(USER_KEY, JSON.stringify(userData));
     syncFromStorage();
+
+    // Redirect based on role
+    if (userData.role === "ROLE_ADMIN") {
+      navigate("/admin");
+    } else {
+      navigate("/");
+    }
   };
 
   const clearAuth = () => {

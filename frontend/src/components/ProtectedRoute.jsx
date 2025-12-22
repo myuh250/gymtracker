@@ -3,7 +3,11 @@ import { Navigate } from "react-router-dom";
 import { Spin } from "antd";
 import { useAuth } from "../contexts/AuthContext";
 
-const ProtectedRoute = ({ children, requireAdmin = false }) => {
+const ProtectedRoute = ({
+  children,
+  requireAdmin = false,
+  requireUser = false,
+}) => {
   const { isAuthenticated, isAdmin, loading } = useAuth();
 
   // Show loading spinner while checking auth status
@@ -27,7 +31,12 @@ const ProtectedRoute = ({ children, requireAdmin = false }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Authenticated but not admin (when admin required) → redirect to home
+  // Admin trying to access user routes → redirect to admin
+  if (requireUser && isAdmin()) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  // User trying to access admin routes → redirect to home
   if (requireAdmin && !isAdmin()) {
     return <Navigate to="/" replace />;
   }

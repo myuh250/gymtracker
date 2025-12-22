@@ -99,6 +99,12 @@ export default function LoginPage() {
             />
           </Form.Item>
 
+          <div style={{ textAlign: "right", marginBottom: 16 }}>
+            <Link to="/forgot-password" style={{ fontSize: 14 }}>
+              Quên mật khẩu?
+            </Link>
+          </div>
+
           <Form.Item>
             <Button
               type="primary"
@@ -106,7 +112,6 @@ export default function LoginPage() {
               block
               size="large"
               loading={loading}
-              style={{ marginTop: 10 }}
             >
               Đăng nhập
             </Button>

@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.gymtracker.dto.req.ForgotPasswordRequest;
 import com.gymtracker.dto.req.LoginRequest;
 import com.gymtracker.dto.req.RegisterRequest;
 import com.gymtracker.dto.res.AuthResponse;
+import com.gymtracker.dto.res.ForgotPasswordResponse;
 import com.gymtracker.service.AuthService;
 
 import jakarta.validation.Valid;
@@ -29,5 +31,10 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ForgotPasswordResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.forgotPassword(request));
     }
 }
