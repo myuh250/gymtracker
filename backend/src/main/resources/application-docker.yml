@@ -1,0 +1,146 @@
+spring:
+  application:
+    name: gym-tracker
+
+  # ========================================
+  # DATABASE CONFIGURATION (MySQL - Docker)
+  # ========================================
+  datasource:
+    url: ${DATA_SOURCE_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # ========================================
+  # JPA / HIBERNATE
+  # ========================================
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  # ========================================
+  # SQL INITIALIZATION (for data.sql)
+  # ========================================
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
+      continue-on-error: true
+
+  # ========================================
+  # OAUTH2 / GOOGLE LOGIN
+  # ========================================
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope: openid, profile, email
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            client-name: Google
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+  # ========================================
+  # FILE UPLOAD
+  # ========================================
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  # ========================================
+  # THYMELEAF
+  # ========================================
+  thymeleaf:
+    check-template-location: false
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    cache: false
+
+# ========================================
+# SERVER
+# ========================================
+server:
+  port: ${SERVER_PORT:8080}
+
+# ========================================
+# SECURITY / JWT
+# ========================================
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+  service-token-expiration: ${JWT_SERVICE_TOKEN_EXPIRATION:86400000}
+
+# ========================================
+# CORS
+# ========================================
+app:
+  cors:
+    allowed-origins: ${FRONT_END_URL}
+
+  websocket:
+    allowed-origins: ${FRONT_END_URL}
+
+# ========================================
+# LOGGING
+# ========================================
+logging:
+  level:
+    root: INFO
+    com.gymtracker: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+
+# ========================================
+# SWAGGER / OPENAPI
+# ========================================
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+
+# ========================================
+# ACTUATOR
+# ========================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

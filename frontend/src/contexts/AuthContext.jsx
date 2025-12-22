@@ -68,6 +68,8 @@ export const AuthProvider = ({ children }) => {
   const clearAuth = () => {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    // Clear chat session when user logs out to avoid cross-account leakage.
+    localStorage.removeItem("chatSessionId");
     setAuthState({ token: null, user: null });
   };
 
