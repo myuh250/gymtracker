@@ -67,6 +67,12 @@ public class User extends BaseEntity {
     @Column(name = "refresh_token", length = 500)
     private String refreshToken;
     
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+    
+    @Column(name = "password_reset_token_expiry")
+    private java.time.LocalDateTime passwordResetTokenExpiry;
+    
     // Relationships
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WorkoutLog> workoutLogs = new ArrayList<>();

@@ -26,15 +26,11 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Tài khoản không tồn tại"));
 
-        // Check if user is enabled
-        if (!user.getIsEnabled()) {
-            throw new UsernameNotFoundException("Tài khoản đã bị chặn. Vui lòng liên hệ với admin");
-        }
-
+        // Spring Security will automatically throw DisabledException if enabled = false
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPasswordHash(),
-                user.getIsEnabled(), // enabled
+                user.getIsEnabled(), // enabled - if false, DisabledException will be thrown by Spring Security
                 true, // accountNonExpired
                 true, // credentialsNonExpired
                 true, // accountNonLocked
