@@ -21,6 +21,10 @@ jobs:
     build:
         runs-on: ubuntu-latest
 
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          BACKEND_SERVICE_TOKEN: ${{ secrets.BACKEND_SERVICE_TOKEN }}
+
         defaults:
             run:
                 working-directory: ./llm-service

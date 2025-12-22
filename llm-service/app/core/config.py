@@ -1,0 +1,146 @@
+from typing import List, Optional
+from pydantic import Field, field_validator, computed_field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application configuration settings"""
+    
+    # App metadata
+    APP_NAME: str = "Gym Tracker LLM Service"
+    VERSION: str = "1.0.0"
+    DESCRIPTION: str = "AI/LLM service for workout suggestions, analysis, and knowledge queries"
+    
+    # API documentation
+    DOCS_URL: str = "/docs"
+    REDOC_URL: str = "/redoc"
+    
+    # CORS settings - stored as string, parsed to list
+    ALLOWED_ORIGINS_STR: str = Field(
+        default="http://localhost:3000,http://localhost:5173,http://localhost:8080",
+        description="Comma-separated list of allowed origins"
+    )
+    
+    # OpenAI API settings
+    OPENAI_API_KEY: str = Field(
+        ..., # Required environment variable
+        description="OpenAI API key"
+    )
+    OPENAI_MODEL: str = Field(
+        default="gpt-4o-mini",
+        description="OpenAI model name"
+    )
+    OPENAI_TEMPERATURE: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=2.0,
+        description="Temperature for response generation"
+    )
+    OPENAI_MAX_TOKENS: int = Field(
+        default=2048,
+        gt=0,
+        description="Maximum tokens for response"
+    )
+    
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore"
+    )
+    
+    # REDIS settings
+    REDIS_HOST: str = Field(
+        default="localhost",
+        description="Redis host"
+    )
+    REDIS_PORT: int = Field(
+        default=6379,
+        description="Redis port"
+    )
+    REDIS_DB: int = Field(
+        default=0,
+        description="Redis database number (0-15)"
+    )
+    REDIS_PASSWORD: Optional[str] = Field(
+        default=None,
+        description="Redis password (if auth enabled)"
+    )
+    REDIS_MAX_CONNECTIONS: int = Field(
+        default=10,
+        description="Maximum Redis pool connections"
+    )
+    
+    # Session settings
+    SESSION_TTL_SECONDS: int = Field(
+        default=7200,  
+        description="Session expiry time in seconds"
+    )
+    MAX_MESSAGES_PER_SESSION: int = Field(
+        default=50,
+        description="Maximum messages to keep per session"
+    )
+    
+    # PostgreSQL + pgvector for RAG
+    POSTGRES_HOST: str = Field(
+        default="localhost",
+        description="PostgreSQL host"
+    )
+    POSTGRES_PORT: int = Field(
+        default=5433,
+        description="PostgreSQL port"
+    )
+    POSTGRES_DB: str = Field(
+        default="gym_rag",
+        description="PostgreSQL database name"
+    )
+    POSTGRES_USER: str = Field(
+        default="raguser",
+        description="PostgreSQL user"
+    )
+    POSTGRES_PASSWORD: str = Field(
+        default="ragpassword",
+        description="PostgreSQL password"
+    )
+    DEBUG: bool = Field(
+        default=False,
+        description="Debug mode (enables SQL echo)"
+    )
+    
+    # Backend API (for RAG data sync)
+    BACKEND_BASE_URL: str = Field(
+        default="http://localhost:8080",
+        description="Backend API base URL"
+    )
+    BACKEND_SERVICE_TOKEN: str = Field(
+        ...,  # Required field
+        description="Service token for backend authentication (get from /api/service/token)"
+    )
+    
+    @computed_field
+    @property
+    def DATABASE_URL(self) -> str:
+        """Construct PostgreSQL connection URL for asyncpg"""
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+    
+    @computed_field
+    @property
+    def ALLOWED_ORIGINS(self) -> List[str]:
+        """Parse comma-separated origins into a list"""
+        return [
+            origin.strip() 
+            for origin in self.ALLOWED_ORIGINS_STR.split(",") 
+            if origin.strip()
+        ]
+
+
+# Create a global settings instance
+def get_settings() -> Settings:
+    """Get settings instance (for dependency injection)"""
+    return Settings()
+
+settings = get_settings()
+
