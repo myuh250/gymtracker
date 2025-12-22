@@ -22,7 +22,8 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          BACKEND_SERVICE_TOKEN: ${{ secrets.BACKEND_SERVICE_TOKEN }}
 
         defaults:
             run:

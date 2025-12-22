@@ -283,6 +283,23 @@ VALUES
     (18, 22, 3, 0, 45.0, false, 'Planned', 90, NOW(), NOW());
 
 -- ============================================
+-- 5. SERVICE ACCOUNTS DATA
+-- ============================================
+-- Service accounts for inter-service authentication
+-- Password: llm-service-secret-dev-2024 (hashed with BCrypt)
+INSERT IGNORE INTO service_accounts (service_name, client_id, client_secret_hash, is_active, created_at, updated_at)
+VALUES
+    ('LLM Service', 'llm-service', '$2a$10$ATMIDXKXmRvXkL2NqiDowed0cv49k3fKzR.r2s2kwBvuvZfr/odtO', true, NOW(), NOW());
+
+-- Service Account Scopes
+INSERT IGNORE INTO service_account_scopes (service_account_id, scope)
+SELECT id, 'RAG_READ' FROM service_accounts WHERE client_id = 'llm-service'
+UNION ALL
+SELECT id, 'RAG_SYNC' FROM service_accounts WHERE client_id = 'llm-service'
+UNION ALL
+SELECT id, 'HEALTH_CHECK' FROM service_accounts WHERE client_id = 'llm-service';
+
+-- ============================================
 -- END OF SAMPLE DATA
 -- ============================================
 -- Summary:
@@ -290,5 +307,5 @@ VALUES
 -- - 41 Exercises (39 default + 2 custom)
 -- - 18 Workout Logs (various dates and completion status)
 -- - 100+ Exercise Sets (with realistic weights and reps)
--- - 3 Service Accounts (with appropriate scopes)
+-- - 1 Service Accounts (with appropriate scopes)
 -- ============================================
