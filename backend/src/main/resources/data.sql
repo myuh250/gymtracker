@@ -24,11 +24,11 @@
 -- Note: In production, use proper password hashing through your service layer
 INSERT INTO users (email, password_hash, full_name, role, is_enabled, is_oauth, oauth_provider, oauth_id, avatar_url, created_at, updated_at) 
 VALUES 
-    ('admin@gymtracker.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjBVBTlXPmF2hKCnLVv8yBHtFt2RwK', 'Admin User', 'ROLE_ADMIN', true, false, NULL, NULL, NULL, NOW(), NOW()),
-    ('john.doe@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjBVBTlXPmF2hKCnLVv8yBHtFt2RwK', 'John Doe', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=1', NOW(), NOW()),
-    ('jane.smith@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjBVBTlXPmF2hKCnLVv8yBHtFt2RwK', 'Jane Smith', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=2', NOW(), NOW()),
-    ('mike.wilson@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjBVBTlXPmF2hKCnLVv8yBHtFt2RwK', 'Mike Wilson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=3', NOW(), NOW()),
-    ('sarah.johnson@example.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IjBVBTlXPmF2hKCnLVv8yBHtFt2RwK', 'Sarah Johnson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=4', NOW(), NOW()),
+    ('admin@gymtracker.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Admin User', 'ROLE_ADMIN', true, false, NULL, NULL, NULL, NOW(), NOW()),
+    ('john.doe@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'John Doe', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=1', NOW(), NOW()),
+    ('jane.smith@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Jane Smith', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=2', NOW(), NOW()),
+    ('mike.wilson@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Mike Wilson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=3', NOW(), NOW()),
+    ('sarah.johnson@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Sarah Johnson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=4', NOW(), NOW()),
     ('google.user@gmail.com', NULL, 'Google OAuth User', 'ROLE_USER', true, true, 'google', '123456789', 'https://i.pravatar.cc/150?img=5', NOW(), NOW());
 
 -- ============================================
