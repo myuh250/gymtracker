@@ -56,9 +56,29 @@ USER_STATS_TOOL = {
     }
 }
 
+GET_USER_WORKOUT_HISTORY_TOOL = {
+    "name": "get_user_workout_history",
+    "description": "Get chronological list of user's workout dates and summaries. Use this when user asks 'what dates did I workout', 'list all my workouts', 'which days I trained', or wants to see all workout history.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "days": {
+                "type": "integer",
+                "description": "Number of days to look back (default 30, max 180)"
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum number of workouts to return (default 20, max 100)"
+            }
+        },
+        "required": []
+    }
+}
+
 # List of all available tools
 ALL_TOOLS = [
     EXERCISE_SEARCH_TOOL,
     USER_WORKOUT_SEARCH_TOOL,
-    USER_STATS_TOOL
+    USER_STATS_TOOL,
+    GET_USER_WORKOUT_HISTORY_TOOL
 ]

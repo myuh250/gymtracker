@@ -268,6 +268,9 @@ class OpenAIService:
         try:
             # Format RAG results as context
             rag_context = self._format_tool_results(tool_results)
+            logger.info("RAG context length=%d preview=%s",
+                         len(rag_context) if rag_context else 0,
+                         (rag_context[:500] + '...') if rag_context and len(rag_context) > 500 else rag_context)
             
             logger.info(
                 f"Building LONG-TERM prompt with RAG context "
@@ -317,7 +320,7 @@ class OpenAIService:
         Note: Limits results to top 3 per tool to prevent token explosion.
         """
         MAX_RESULTS_PER_TOOL = 3
-        MAX_TEXT_LENGTH = 150
+        MAX_TEXT_LENGTH = 250
         
         parts = []
         
@@ -344,6 +347,25 @@ class OpenAIService:
                 parts.append(f"• Total workouts: {stats.get('totalWorkouts', 0)}")
                 parts.append(f"• Total volume: {stats.get('totalVolume', 0):.0f} kg")
                 parts.append(f"• Avg workouts/week: {stats.get('averageWorkoutsPerWeek', 0):.1f}")
+            
+            elif tool_name == 'get_user_workout_history':
+                parts.append("\n=== User's Workout History (RAG) ===")
+                workouts = result.get('workouts', [])
+                parts.append(f"Found {len(workouts)} workout(s):\n")
+                
+                for i, workout in enumerate(workouts):
+                    # Extract date and basic info (try multiple field name formats)
+                    date = workout.get('logDate') or workout.get('workoutDate') or workout.get('date') or workout.get('workout_date', 'Unknown')
+                    notes = workout.get('notes', '')
+                    sets = workout.get('sets', [])
+                    
+                    # Format workout summary
+                    parts.append(f"📅 {date}")
+                    if notes:
+                        parts.append(f"   Notes: {notes[:100]}")
+                    if sets:
+                        parts.append(f"   Exercises: {len(sets)} sets completed")
+                    parts.append("")  # Empty line for readability
         
         return "\n".join(parts)
 

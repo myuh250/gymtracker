@@ -22,7 +22,7 @@ class SearchResult:
 class VectorSearchService:
     """Semantic search service for RAG."""
     
-    MIN_SIMILARITY = 0.6  # Filter out irrelevant results
+    MIN_SIMILARITY = 0.5  # Filter out irrelevant results
     
     def __init__(self):
         self.embedding_service = get_embedding_service()
@@ -41,6 +41,12 @@ class VectorSearchService:
         logger.info(f"Searching exercises: '{query}' (limit: {limit})")
         
         query_embedding = await self.embedding_service.generate_embedding(query)
+        logger.debug(
+            "Query embedding generated for exercises: len=%d type=%s sample=%s",
+            len(query_embedding) if hasattr(query_embedding, '__len__') else -1,
+            type(query_embedding),
+            (query_embedding[:5] if hasattr(query_embedding, '__getitem__') else query_embedding)
+        )
         
         async with AsyncSessionLocal() as session:
             similarity_expr = 1 - ExerciseEmbedding.embedding.cosine_distance(query_embedding)
@@ -55,9 +61,8 @@ class VectorSearchService:
             if muscle_group:
                 query_stmt = query_stmt.where(ExerciseEmbedding.muscle_group == muscle_group)
             
-            query_stmt = query_stmt.order_by(
-                ExerciseEmbedding.embedding.cosine_distance(query_embedding).asc()  # Explicit ASC
-            ).limit(limit)
+            # Order by computed similarity (descending): most similar first
+            query_stmt = query_stmt.order_by(similarity_expr.desc()).limit(limit)
             
             result = await session.execute(query_stmt)
             
@@ -71,6 +76,7 @@ class VectorSearchService:
                     'muscle_group': exercise.muscle_group,
                     'similarity': float(similarity)
                 })
+        logger.debug("Exercise similarities: %s", [r['similarity'] for r in results])
         
         logger.info(f"Found {len(results)} exercises (similarity >= {self.MIN_SIMILARITY})")
         return results
@@ -89,6 +95,12 @@ class VectorSearchService:
         logger.info(f"Searching workouts: user={user_id}, query='{query}' (limit: {limit})")
         
         query_embedding = await self.embedding_service.generate_embedding(query)
+        logger.debug(
+            "Query embedding generated for workouts: len=%d type=%s sample=%s",
+            len(query_embedding) if hasattr(query_embedding, '__len__') else -1,
+            type(query_embedding),
+            (query_embedding[:5] if hasattr(query_embedding, '__getitem__') else query_embedding)
+        )
         
         async with AsyncSessionLocal() as session:
             similarity_expr = 1 - WorkoutLogEmbedding.embedding.cosine_distance(query_embedding)
@@ -100,7 +112,7 @@ class VectorSearchService:
                 WorkoutLogEmbedding.user_id == user_id,
                 similarity_expr >= self.MIN_SIMILARITY  # Filter threshold
             ).order_by(
-                WorkoutLogEmbedding.embedding.cosine_distance(query_embedding).asc()  # Explicit ASC
+                similarity_expr.desc()  # Order by similarity (desc)
             ).limit(limit)
             
             result = await session.execute(query_stmt)
@@ -118,6 +130,7 @@ class VectorSearchService:
                     'exercise_count': workout.exercise_count,
                     'similarity': float(similarity)
                 })
+        logger.debug("Workout similarities: %s", [r['similarity'] for r in results])
         
         logger.info(f"Found {len(results)} workouts (similarity >= {self.MIN_SIMILARITY})")
         return results
