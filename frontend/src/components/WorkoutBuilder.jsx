@@ -18,6 +18,7 @@ const { Text } = Typography;
 
 export default function WorkoutBuilder({
   exercises = [],
+  workouts = [],
   onCreate,
   editingWorkout = null,
   onCancelEdit,
@@ -140,7 +141,7 @@ export default function WorkoutBuilder({
     setSessionExercises((s) => s.filter((se) => se.id !== sessionId));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!sessionExercises.length)
       return message.warn("Thêm ít nhất 1 bài tập vào buổi tập");
     const payload = {
@@ -161,11 +162,16 @@ export default function WorkoutBuilder({
         }))
       ),
     };
-    if (onCreate) onCreate(payload);
-    message.success(
-      editingWorkout ? "Buổi tập đã được cập nhật" : "Buổi tập đã được lập"
-    );
-    handleClose();
+
+    try {
+      // Wait for onCreate to complete - it will show success/error messages
+      if (onCreate) await onCreate(payload);
+      // Only close modal if successful (no error thrown)
+      handleClose();
+    } catch (error) {
+      // Error already handled by onCreate, just don't close modal
+      console.error("Workout creation failed:", error);
+    }
   };
 
   const handleClose = () => {
@@ -197,7 +203,24 @@ export default function WorkoutBuilder({
         width={800}
       >
         <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
-          <DatePicker value={date} onChange={(d) => setDate(d || dayjs())} />
+          <DatePicker
+            value={date}
+            onChange={(d) => setDate(d || dayjs())}
+            disabledDate={(current) => {
+              // Don't disable when editing current workout
+              if (
+                editingWorkout &&
+                current.format("YYYY-MM-DD") === editingWorkout.logDate
+              ) {
+                return false;
+              }
+              // Disable dates that already have workouts
+              return workouts.some(
+                (w) => w.logDate === current.format("YYYY-MM-DD")
+              );
+            }}
+            format="DD/MM/YYYY"
+          />
           <Select
             style={{ minWidth: 160 }}
             placeholder="Lọc nhóm cơ"
@@ -238,7 +261,7 @@ export default function WorkoutBuilder({
             Chưa có bài tập nào trong buổi — thêm từ trên.
           </Text>
         ) : (
-          <Space direction="vertical" style={{ width: "100%" }}>
+          <Space orientation="vertical" style={{ width: "100%" }}>
             {sessionExercises.map((se) => (
               <ExerciseSessionCard
                 key={se.id}
