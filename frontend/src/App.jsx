@@ -1,18 +1,20 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
+import OAuthCallback from "./pages/OAuthCallback";
 import RegisterPage from "./pages/RegisterPage";
 import HomePage from "./pages/HomePage";
 import WorkoutPage from "./pages/WorkoutPage";
 import AdminPage from "./pages/AdminPage";
 import AIChat from "./components/AIChat";
 import MainLayout from "./layouts/MainLayout";
-import ProtectedRoute from "./components/ProtectedRoute";
+ import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/oauth2/callback" element={<OAuthCallback />} />
         <Route path="/register" element={<RegisterPage />} />
 
         <Route

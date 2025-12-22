@@ -12,25 +12,12 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  // Xử lý đăng nhập Google (Giữ nguyên logic mock của bạn)
   const handleGoogleLogin = () => {
     setLoading(true);
-    message.loading({ content: "Đang kết nối tới Google...", key: "auth" });
-
-    setTimeout(() => {
-      const mockResponse = {
-        token: "google_oauth2_token_xyz_123",
-        email: "gym_pro@gmail.com",
-        fullName: "Google User",
-        role: "USER",
-      };
-
-      login(mockResponse, mockResponse.token);
-
-      message.success({ content: "Đăng nhập Google thành công!", key: "auth" });
-      setLoading(false);
-      navigate("/");
-    }, 1500);
+    message.loading({ content: "Đang chuyển đến Google...", key: "auth" });
+    const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8080";
+    // Spring Security default entry point for OAuth2 login
+    window.location.href = `${baseUrl}/oauth2/authorization/google`;
   };
 
   const onFinish = async (values) => {
