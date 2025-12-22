@@ -20,9 +20,9 @@ export const getUserTableColumns = ({
     width: 60,
   },
   {
-    title: "Username",
-    dataIndex: "username",
-    key: "username",
+    title: "Email",
+    dataIndex: "email",
+    key: "email",
     render: (text, record) => (
       <Space>
         <span>{text}</span>
@@ -35,30 +35,25 @@ export const getUserTableColumns = ({
     ),
   },
   {
-    title: "Email",
-    dataIndex: "email",
-    key: "email",
-  },
-  {
     title: "Họ tên",
     dataIndex: "fullName",
     key: "fullName",
   },
   {
     title: "Trạng thái",
-    dataIndex: "isBlocked",
-    key: "isBlocked",
+    dataIndex: "isEnabled",
+    key: "isEnabled",
     width: 120,
-    render: (isBlocked) => (
-      <Tag color={isBlocked ? "red" : "green"}>
-        {isBlocked ? "Đã chặn" : "Hoạt động"}
+    render: (isEnabled) => (
+      <Tag color={isEnabled ? "green" : "red"}>
+        {isEnabled ? "Hoạt động" : "Đã chặn"}
       </Tag>
     ),
   },
   {
-    title: "Lần đăng nhập cuối",
-    dataIndex: "lastLogin",
-    key: "lastLogin",
+    title: "Ngày tạo",
+    dataIndex: "createdAt",
+    key: "createdAt",
     width: 140,
     render: (date) => dayjs(date).format("DD/MM/YYYY"),
   },
@@ -86,11 +81,11 @@ export const getUserTableColumns = ({
         </Button>
         {record.role !== "ROLE_ADMIN" && (
           <Popconfirm
-            title={record.isBlocked ? "Bỏ chặn user?" : "Chặn user?"}
+            title={record.isEnabled ? "Chặn user?" : "Bỏ chặn user?"}
             description={
-              record.isBlocked
-                ? `Cho phép ${record.username} truy cập lại?`
-                : `Ngăn ${record.username} đăng nhập?`
+              record.isEnabled
+                ? `Ngăn ${record.email} đăng nhập?`
+                : `Cho phép ${record.email} truy cập lại?`
             }
             onConfirm={() => onBlockUser(record.id)}
             okText="Xác nhận"
@@ -98,13 +93,13 @@ export const getUserTableColumns = ({
           >
             <Button
               type="link"
-              danger={!record.isBlocked}
+              danger={record.isEnabled}
               icon={
-                record.isBlocked ? <CheckCircleOutlined /> : <StopOutlined />
+                record.isEnabled ? <StopOutlined /> : <CheckCircleOutlined />
               }
               size="small"
             >
-              {record.isBlocked ? "Bỏ chặn" : "Chặn"}
+              {record.isEnabled ? "Chặn" : "Bỏ chặn"}
             </Button>
           </Popconfirm>
         )}
