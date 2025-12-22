@@ -1,4 +1,4 @@
 .idea/*
 .cursor/*
 .vscode/*
-docs/
+docs/backend/docker-compose.yml
