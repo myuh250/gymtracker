@@ -19,41 +19,76 @@ export default function WorkoutPage() {
   const [workouts, setWorkouts] = useState([]);
   const [exercises, setExercises] = useState([]);
   const [editingWorkout, setEditingWorkout] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setExercises(getExercises());
-    setWorkouts(getWorkouts());
+    loadData();
   }, []);
 
-  const handleCreateWorkout = (newWorkoutPayload) => {
-    if (editingWorkout) {
-      // Update mode
-      updateWorkout({ ...newWorkoutPayload, id: editingWorkout.id });
-      setEditingWorkout(null);
-    } else {
-      // Create mode
-      addWorkout(newWorkoutPayload);
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [exercisesData, workoutsData] = await Promise.all([
+        getExercises(),
+        getWorkouts(),
+      ]);
+      setExercises(exercisesData);
+      setWorkouts(workoutsData);
+    } catch (error) {
+      message.error("Không thể tải dữ liệu");
+    } finally {
+      setLoading(false);
     }
-    setWorkouts(getWorkouts());
   };
 
-  const handleToggleComplete = (workoutId) => {
-    toggleWorkoutCompleted(workoutId);
-    setWorkouts(getWorkouts());
+  const handleCreateWorkout = async (newWorkoutPayload) => {
+    try {
+      if (editingWorkout) {
+        // Update mode
+        await updateWorkout({ ...newWorkoutPayload, id: editingWorkout.id });
+        message.success("Buổi tập đã được cập nhật");
+        setEditingWorkout(null);
+      } else {
+        // Create mode
+        await addWorkout(newWorkoutPayload);
+        message.success("Buổi tập đã được tạo");
+      }
+      await loadData();
+    } catch (error) {
+      message.error("Lưu buổi tập thất bại");
+    }
   };
 
-  const handleToggleSetComplete = (workoutId, setId) => {
-    toggleSetCompleted(workoutId, setId);
-    setWorkouts(getWorkouts());
+  const handleToggleComplete = async (workoutId) => {
+    try {
+      await toggleWorkoutCompleted(workoutId);
+      await loadData();
+    } catch (error) {
+      message.error("Cập nhật trạng thái thất bại");
+    }
+  };
+
+  const handleToggleSetComplete = async (workoutId, setId) => {
+    try {
+      await toggleSetCompleted(workoutId, setId);
+      await loadData();
+    } catch (error) {
+      message.error("Cập nhật set thất bại");
+    }
   };
 
   const handleEditWorkout = (workout) => {
     setEditingWorkout(workout);
   };
 
-  const handleDeleteWorkout = (workoutId) => {
-    removeWorkout(workoutId);
-    setWorkouts(getWorkouts());
+  const handleDeleteWorkout = async (workoutId) => {
+    try {
+      await removeWorkout(workoutId);
+      await loadData();
+      message.success("Đã xóa buổi tập");
+    } catch (error) {
+      message.error("Xóa buổi tập thất bại");
+    }
   };
 
   return (

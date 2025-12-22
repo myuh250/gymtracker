@@ -4,10 +4,15 @@ import {
   EyeOutlined,
   StopOutlined,
   CheckCircleOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
-export const getUserTableColumns = ({ onViewProfile, onBlockUser }) => [
+export const getUserTableColumns = ({
+  onViewProfile,
+  onBlockUser,
+  onEditUser,
+}) => [
   {
     title: "ID",
     dataIndex: "id",
@@ -60,7 +65,7 @@ export const getUserTableColumns = ({ onViewProfile, onBlockUser }) => [
   {
     title: "Hành động",
     key: "action",
-    width: 180,
+    width: 240,
     render: (_, record) => (
       <Space>
         <Button
@@ -70,6 +75,14 @@ export const getUserTableColumns = ({ onViewProfile, onBlockUser }) => [
           onClick={() => onViewProfile(record.id)}
         >
           Xem
+        </Button>
+        <Button
+          type="link"
+          icon={<EditOutlined />}
+          size="small"
+          onClick={() => onEditUser(record.id)}
+        >
+          Sửa
         </Button>
         {record.role !== "ROLE_ADMIN" && (
           <Popconfirm

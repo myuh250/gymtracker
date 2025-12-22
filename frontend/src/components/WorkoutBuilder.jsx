@@ -25,7 +25,22 @@ export default function WorkoutBuilder({
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(dayjs());
   const [selectedExerciseId, setSelectedExerciseId] = useState(null);
+  const [filterMuscleGroup, setFilterMuscleGroup] = useState(null);
   const [sessionExercises, setSessionExercises] = useState([]);
+
+  // Lấy danh sách muscle groups có trong exercises
+  const availableMuscleGroups = React.useMemo(() => {
+    const groups = new Set(
+      exercises.map((ex) => ex.muscleGroup).filter(Boolean)
+    );
+    return Array.from(groups).sort();
+  }, [exercises]);
+
+  // Filter exercises theo muscle group
+  const filteredExercises = React.useMemo(() => {
+    if (!filterMuscleGroup) return exercises;
+    return exercises.filter((ex) => ex.muscleGroup === filterMuscleGroup);
+  }, [exercises, filterMuscleGroup]);
 
   // When editingWorkout changes, open modal and populate form
   useEffect(() => {
@@ -157,6 +172,7 @@ export default function WorkoutBuilder({
     setOpen(false);
     setSessionExercises([]);
     setDate(dayjs());
+    setFilterMuscleGroup(null);
     if (editingWorkout && onCancelEdit) {
       onCancelEdit();
     }
@@ -183,13 +199,28 @@ export default function WorkoutBuilder({
         <div style={{ display: "flex", gap: 16, marginBottom: 12 }}>
           <DatePicker value={date} onChange={(d) => setDate(d || dayjs())} />
           <Select
-            style={{ minWidth: 320 }}
+            style={{ minWidth: 160 }}
+            placeholder="Lọc nhóm cơ"
+            value={filterMuscleGroup}
+            onChange={setFilterMuscleGroup}
+            allowClear
+          >
+            {availableMuscleGroups.map((group) => (
+              <Option key={group} value={group}>
+                {group}
+              </Option>
+            ))}
+          </Select>
+          <Select
+            style={{ minWidth: 280 }}
             placeholder="Chọn bài tập để thêm"
             value={selectedExerciseId}
             onChange={(v) => setSelectedExerciseId(v)}
             allowClear
+            showSearch
+            optionFilterProp="children"
           >
-            {exercises.map((e) => (
+            {filteredExercises.map((e) => (
               <Option key={e.id} value={e.id}>
                 {e.name} — {e.muscleGroup}
               </Option>

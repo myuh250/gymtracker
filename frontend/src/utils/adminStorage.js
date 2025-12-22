@@ -68,9 +68,35 @@ export function toggleBlockUser(id) {
   return updated.find((u) => u.id === id);
 }
 
-export function updateUser(user) {
+export function createUser(userData) {
   const users = getUsers();
-  const updated = users.map((u) => (u.id === user.id ? user : u));
+  const newUser = {
+    id: Math.max(...users.map((u) => u.id), 0) + 1,
+    username: userData.username,
+    email: userData.email,
+    fullName: userData.fullName,
+    role: userData.role || "ROLE_USER",
+    isBlocked: false,
+    createdAt: new Date().toISOString(),
+    lastLogin: new Date().toISOString(),
+  };
+  users.push(newUser);
+  saveUsers(users);
+  return newUser;
+}
+
+export function updateUser(userId, userData) {
+  const users = getUsers();
+  const updated = users.map((u) =>
+    u.id === userId
+      ? {
+          ...u,
+          email: userData.email,
+          fullName: userData.fullName,
+          role: userData.role,
+        }
+      : u
+  );
   saveUsers(updated);
-  return user;
+  return updated.find((u) => u.id === userId);
 }

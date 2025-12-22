@@ -1,108 +1,110 @@
-const SAMPLE = [
-  { id: 1, name: "Hít đất", muscleGroup: "Chest", description: "Tập ngực" },
-  { id: 2, name: "Kéo xà", muscleGroup: "Back", description: "Tập lưng" },
-  { id: 3, name: "Squat", muscleGroup: "Legs", description: "Tập chân" },
-];
+import * as exerciseService from "../services/exerciseService";
+import * as workoutService from "../services/workoutService";
 
-export function getExercises() {
+// ==============================================
+// Exercise Functions - API Integration
+// ==============================================
+
+export async function getExercises() {
   try {
-    const raw = localStorage.getItem("exercises");
-    if (!raw) {
-      localStorage.setItem("exercises", JSON.stringify(SAMPLE));
-      return SAMPLE.slice();
-    }
-    return JSON.parse(raw) || [];
-  } catch (e) {
-    console.error("getExercises error", e);
-    return SAMPLE.slice();
-  }
-}
-
-export function saveExercises(list) {
-  try {
-    localStorage.setItem("exercises", JSON.stringify(list || []));
-  } catch (e) {
-    console.error("saveExercises error", e);
-  }
-}
-
-export function addExercise(item) {
-  const list = getExercises();
-  list.push(item);
-  saveExercises(list);
-  return item;
-}
-
-export function updateExercise(item) {
-  const list = getExercises().map((e) => (e.id === item.id ? item : e));
-  saveExercises(list);
-  return item;
-}
-
-export function removeExercise(id) {
-  const list = getExercises().filter((e) => e.id !== id);
-  saveExercises(list);
-  return id;
-}
-
-// Workout helpers
-export function getWorkouts() {
-  try {
-    const raw = localStorage.getItem("workouts");
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    console.error("getWorkouts error", e);
+    const response = await exerciseService.getExercises();
+    return response.data || response || [];
+  } catch (error) {
+    console.error("getExercises error:", error);
     return [];
   }
 }
 
-export function saveWorkouts(list) {
+export async function addExercise(item) {
   try {
-    localStorage.setItem("workouts", JSON.stringify(list || []));
-  } catch (e) {
-    console.error("saveWorkouts error", e);
+    const response = await exerciseService.createExercise(item);
+    return response.data || response;
+  } catch (error) {
+    console.error("addExercise error:", error);
+    throw error;
   }
 }
 
-export function addWorkout(workout) {
-  const list = getWorkouts();
-  const workoutWithId = { ...workout, id: Date.now() };
-  list.unshift(workoutWithId);
-  saveWorkouts(list);
-  return workoutWithId;
+export async function updateExercise(item) {
+  try {
+    const response = await exerciseService.updateExercise(item.id, item);
+    return response.data || response;
+  } catch (error) {
+    console.error("updateExercise error:", error);
+    throw error;
+  }
 }
 
-export function updateWorkout(workout) {
-  const list = getWorkouts().map((w) => (w.id === workout.id ? workout : w));
-  saveWorkouts(list);
-  return workout;
+export async function removeExercise(id) {
+  try {
+    await exerciseService.deleteExercise(id);
+    return id;
+  } catch (error) {
+    console.error("removeExercise error:", error);
+    throw error;
+  }
 }
 
-export function toggleWorkoutCompleted(id) {
-  const list = getWorkouts().map((w) =>
-    w.id === id ? { ...w, isCompleted: !w.isCompleted } : w
-  );
-  saveWorkouts(list);
-  return list.find((w) => w.id === id);
+// ==============================================
+// Workout Functions - API Integration
+// ==============================================
+
+export async function getWorkouts() {
+  try {
+    const response = await workoutService.getWorkoutLogs();
+    return response.data || response || [];
+  } catch (error) {
+    console.error("getWorkouts error:", error);
+    return [];
+  }
 }
 
-export function toggleSetCompleted(workoutId, setId) {
-  const list = getWorkouts().map((w) => {
-    if (w.id !== workoutId) return w;
-
-    return {
-      ...w,
-      sets: w.sets.map((set) =>
-        set.id === setId ? { ...set, isCompleted: !set.isCompleted } : set
-      ),
-    };
-  });
-  saveWorkouts(list);
-  return list.find((w) => w.id === workoutId);
+export async function addWorkout(workout) {
+  try {
+    const response = await workoutService.createWorkoutLog(workout);
+    return response.data || response;
+  } catch (error) {
+    console.error("addWorkout error:", error);
+    throw error;
+  }
 }
 
-export function removeWorkout(id) {
-  const list = getWorkouts().filter((w) => w.id !== id);
-  saveWorkouts(list);
-  return id;
+export async function updateWorkout(workout) {
+  try {
+    const response = await workoutService.updateWorkoutLog(workout.id, workout);
+    return response.data || response;
+  } catch (error) {
+    console.error("updateWorkout error:", error);
+    throw error;
+  }
+}
+
+export async function toggleWorkoutCompleted(id) {
+  try {
+    const response = await workoutService.toggleWorkoutCompletion(id);
+    return response.data || response;
+  } catch (error) {
+    console.error("toggleWorkoutCompleted error:", error);
+    throw error;
+  }
+}
+
+export async function toggleSetCompleted(workoutId, setId) {
+  try {
+    const response = await workoutService.toggleSetCompletion(workoutId, setId);
+    return response.data || response;
+  } catch (error) {
+    console.error("toggleSetCompleted error:", error);
+    throw error;
+  }
+}
+
+export async function removeWorkout(id) {
+  try {
+    await workoutService.deleteWorkoutLog(id);
+    return id;
+  } catch (error) {
+    console.error("removeWorkout error:", error);
+    throw error;
+  }
 }

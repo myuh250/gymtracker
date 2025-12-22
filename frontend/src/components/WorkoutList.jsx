@@ -50,7 +50,7 @@ export default function WorkoutList({
   }
 
   return (
-    <Space orientation="vertical" style={{ width: "100%", marginTop: 24 }}>
+    <Space direction="vertical" style={{ width: "100%", marginTop: 24 }}>
       <div
         style={{
           display: "flex",

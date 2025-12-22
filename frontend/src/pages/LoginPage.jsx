@@ -3,6 +3,7 @@ import { Form, Input, Button, Card, Divider, Typography, message } from "antd";
 import { GoogleOutlined, UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { login as loginAPI } from "../services/authService";
 
 const { Title, Text } = Typography;
 
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
+  // Xử lý đăng nhập Google (Giữ nguyên logic mock của bạn)
   const handleGoogleLogin = () => {
     setLoading(true);
     message.loading({ content: "Đang kết nối tới Google...", key: "auth" });
@@ -31,36 +33,36 @@ export default function LoginPage() {
     }, 1500);
   };
 
-  const onFinish = (values) => {
-    console.log("Form values:", values);
+  const onFinish = async (values) => {
     setLoading(true);
 
-    setTimeout(() => {
-      // Check if admin credentials
-      const isAdmin = values.email === "admin" && values.password === "admin";
+    try {
+      // Call real API - Backend expects { email, password }
+      const response = await loginAPI({
+        email: values.email,
+        password: values.password,
+      });
 
-      const mockResponse = isAdmin
-        ? {
-            username: "admin",
-            email: "admin@gymtracker.com",
-            fullName: "Admin User",
-            role: "ROLE_ADMIN",
-          }
-        : {
-            username: values.email,
-            email: "user@example.com",
-            fullName: "Test User",
-            role: "ROLE_USER",
-          };
+      // Backend returns: { token, email, fullName, role }
+      const { token, email, fullName, role } = response;
 
-      const token = isAdmin ? "admin_token_xyz_789" : "standard_token_abc_456";
+      // Create user object for AuthContext
+      const user = { email, fullName, role };
 
-      login(mockResponse, token);
+      // Save to localStorage and AuthContext
+      localStorage.setItem("accessToken", token);
+      login(user, token);
 
-      message.success(`Xin chào, ${mockResponse.fullName}!`);
-      setLoading(false);
+      message.success(`Xin chào, ${fullName}!`);
       navigate("/");
-    }, 1000);
+    } catch (error) {
+      console.error("Login error:", error);
+      const errorMsg =
+        error.response?.data?.message || error.message || "Đăng nhập thất bại";
+      message.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
