@@ -16,7 +16,6 @@ export default function UserFormModal({
     if (open) {
       if (mode === "edit" && user) {
         form.setFieldsValue({
-          username: user.username,
           email: user.email,
           fullName: user.fullName,
           role: user.role,
@@ -55,28 +54,6 @@ export default function UserFormModal({
         }}
       >
         <Form.Item
-          label="Username"
-          name="username"
-          rules={[
-            { required: true, message: "Vui lòng nhập username" },
-            {
-              min: 3,
-              message: "Username phải có ít nhất 3 ký tự",
-            },
-            {
-              pattern: /^[a-zA-Z0-9_]+$/,
-              message: "Username chỉ được chứa chữ, số và dấu gạch dưới",
-            },
-          ]}
-        >
-          <Input
-            placeholder="Nhập username"
-            disabled={mode === "edit"}
-            autoComplete="off"
-          />
-        </Form.Item>
-
-        <Form.Item
           label="Email"
           name="email"
           rules={[
@@ -84,7 +61,11 @@ export default function UserFormModal({
             { type: "email", message: "Email không hợp lệ" },
           ]}
         >
-          <Input placeholder="Nhập email" autoComplete="off" />
+          <Input
+            placeholder="Nhập email"
+            disabled={mode === "edit"}
+            autoComplete="off"
+          />
         </Form.Item>
 
         <Form.Item
