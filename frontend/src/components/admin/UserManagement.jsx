@@ -7,6 +7,7 @@ import {
   toggleUserEnabled,
   createUser as createUserAPI,
   updateUser as updateUserAPI,
+  deleteUser as deleteUserAPI,
 } from "../../services/adminService";
 import UserProfileModal from "./UserProfileModal";
 import UserFormModal from "./UserFormModal";
@@ -95,6 +96,16 @@ export default function UserManagement() {
     setEditUser(null);
   };
 
+  const handleDeleteUser = async (userId) => {
+    try {
+      await deleteUserAPI(userId);
+      message.success("Đã xóa user thành công!");
+      await loadUsers();
+    } catch (error) {
+      message.error("Không thể xóa user: " + error.message);
+    }
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -105,6 +116,7 @@ export default function UserManagement() {
     onViewProfile: handleViewProfile,
     onBlockUser: handleBlockUser,
     onEditUser: handleEditUser,
+    onDeleteUser: handleDeleteUser,
   });
 
   return (
