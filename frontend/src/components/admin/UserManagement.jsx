@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Table, message, Input, Button } from "antd";
 import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
 import {
-  getUsers,
-  toggleBlockUser,
+  getAllUsers,
   getUserById,
-  createUser,
-  updateUser,
-} from "../../utils/adminStorage";
+  toggleUserEnabled,
+  createUser as createUserAPI,
+  updateUser as updateUserAPI,
+} from "../../services/adminService";
 import UserProfileModal from "./UserProfileModal";
 import UserFormModal from "./UserFormModal";
 import { getUserTableColumns } from "./UserTableColumns";
@@ -25,27 +25,35 @@ export default function UserManagement() {
     loadUsers();
   }, []);
 
-  const loadUsers = () => {
+  const loadUsers = async () => {
     setLoading(true);
-    setTimeout(() => {
-      setUsers(getUsers());
+    try {
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch (error) {
+      message.error("Không thể tải danh sách users: " + error.message);
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
-  const handleBlockUser = (userId) => {
-    const user = toggleBlockUser(userId);
-    message.success(
-      user.isBlocked
-        ? `Đã chặn user ${user.username}`
-        : `Đã bỏ chặn user ${user.username}`
-    );
-    loadUsers();
+  const handleBlockUser = async (userId) => {
+    try {
+      await toggleUserEnabled(userId);
+      message.success("Đã cập nhật trạng thái user");
+      await loadUsers();
+    } catch (error) {
+      message.error(error.message);
+    }
   };
 
-  const handleViewProfile = (userId) => {
-    const user = getUserById(userId);
-    setViewUser(user);
+  const handleViewProfile = async (userId) => {
+    try {
+      const user = await getUserById(userId);
+      setViewUser(user);
+    } catch (error) {
+      message.error("Không thể tải thông tin user: " + error.message);
+    }
   };
 
   const handleCreateUser = () => {
@@ -54,27 +62,31 @@ export default function UserManagement() {
     setIsFormOpen(true);
   };
 
-  const handleEditUser = (userId) => {
-    const user = getUserById(userId);
-    setEditUser(user);
-    setFormMode("edit");
-    setIsFormOpen(true);
+  const handleEditUser = async (userId) => {
+    try {
+      const user = await getUserById(userId);
+      setEditUser(user);
+      setFormMode("edit");
+      setIsFormOpen(true);
+    } catch (error) {
+      message.error("Không thể tải thông tin user: " + error.message);
+    }
   };
 
-  const handleFormSubmit = (values) => {
+  const handleFormSubmit = async (values) => {
     try {
       if (formMode === "create") {
-        createUser(values);
+        await createUserAPI(values);
         message.success("Tạo user thành công!");
       } else {
-        updateUser(editUser.id, values);
+        await updateUserAPI(editUser.id, values);
         message.success("Cập nhật user thành công!");
       }
       setIsFormOpen(false);
       setEditUser(null);
-      loadUsers();
+      await loadUsers();
     } catch (error) {
-      message.error("Có lỗi xảy ra: " + error.message);
+      message.error(error.message);
     }
   };
 
@@ -85,7 +97,6 @@ export default function UserManagement() {
 
   const filteredUsers = users.filter(
     (user) =>
-      user.username.toLowerCase().includes(searchText.toLowerCase()) ||
       user.email.toLowerCase().includes(searchText.toLowerCase()) ||
       user.fullName.toLowerCase().includes(searchText.toLowerCase())
   );
