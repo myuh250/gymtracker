@@ -2,3 +2,5 @@
 .cursor/*
 .vscode/*
 docs/backend/docker-compose.yml
+docs/
+.env.docker

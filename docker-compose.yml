@@ -1,6 +1,21 @@
 version: '3.8'
 
 services:
+  gym-tracker:
+    image: gym-tracker:latest
+    container_name: gym-tracker
+    restart: always
+    ports:
+      - "80:80"        
+    env_file:
+      - .env.docker    
+    depends_on:
+      mysql:
+        condition: service_started
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_healthy
   mysql:
     image: mysql:8.0
     container_name: gymtracker-mysql
