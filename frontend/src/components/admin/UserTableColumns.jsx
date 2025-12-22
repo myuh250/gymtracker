@@ -6,6 +6,7 @@ import {
   CheckCircleOutlined,
   EditOutlined,
   DeleteOutlined,
+  KeyOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -14,6 +15,7 @@ export const getUserTableColumns = ({
   onBlockUser,
   onEditUser,
   onDeleteUser,
+  onResetPassword,
 }) => [
   {
     title: "ID",
@@ -80,6 +82,14 @@ export const getUserTableColumns = ({
           onClick={() => onEditUser(record.id)}
         >
           Sửa
+        </Button>
+        <Button
+          type="link"
+          icon={<KeyOutlined />}
+          size="small"
+          onClick={() => onResetPassword(record.id)}
+        >
+          Đổi MK
         </Button>
         {record.role !== "ROLE_ADMIN" && (
           <>
