@@ -29,6 +29,9 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthFilter;
+    
+    @Autowired
+    private ServiceTokenFilter serviceTokenFilter;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -39,13 +42,15 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/public/**", "/swagger-ui/**", "/v3/api-docs/**", "/uploads/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/service/token", "/api/public/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers("/internal/**").authenticated()  // Service endpoints
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(serviceTokenFilter, UsernamePasswordAuthenticationFilter.class)  // Service token filter first
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

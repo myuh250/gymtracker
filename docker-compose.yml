@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: gymtracker-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: gym_tracker
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_USER: gymuser
+      MYSQL_PASSWORD: gympassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7.0
+    container_name: gymtracker-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  postgres:
+    image: ankane/pgvector:latest
+    container_name: gymtracker-postgres-rag
+    restart: always
+    environment:
+      POSTGRES_DB: gym_rag
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ragpassword
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U raguser -d gym_rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: gymtracker-pgadmin
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gymtracker.dev
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  mysql_data:
+  redis_data:
+  postgres_data:
+  pgadmin_data:

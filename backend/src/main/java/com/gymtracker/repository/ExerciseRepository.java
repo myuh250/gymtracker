@@ -73,5 +73,19 @@ public interface ExerciseRepository extends JpaRepository<Exercise, Long> {
      */
     @Query("SELECT DISTINCT e.muscleGroup FROM Exercise e ORDER BY e.muscleGroup")
     List<String> findDistinctMuscleGroups();
+    
+    // ========== RAG Sync Methods ==========
+    
+    /**
+     * Find exercises updated since a specific timestamp (for incremental sync)
+     */
+    @Query("SELECT e FROM Exercise e WHERE e.updatedAt > :since ORDER BY e.updatedAt ASC")
+    List<Exercise> findByUpdatedAtAfter(@Param("since") java.time.LocalDateTime since);
+    
+    /**
+     * Find all exercises ordered by ID (for initial bulk export)
+     */
+    @Query("SELECT e FROM Exercise e ORDER BY e.id ASC")
+    List<Exercise> findAllOrdered();
 }
 
