@@ -8,9 +8,11 @@ import {
   UserOutlined,
   WarningOutlined,
   ReloadOutlined,
+  SendOutlined,
 } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
 import * as chatService from "../services/chatService";
+import ChatInput from "./ChatInput";
 
 // CSS Animation và custom scrollbar
 const styles = `
@@ -103,6 +105,7 @@ const { Text } = Typography;
 export default function AIChat() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -111,14 +114,19 @@ export default function AIChat() {
   const listRef = useRef(null);
   const isInitialized = useRef(false);
 
-  // Tự động cuộn xuống khi có tin nhắn mới
   useEffect(() => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
   }, [messages, loading, open]);
 
-  // Load chat history khi mở chat lần đầu
+  // Load current user info once for display / debugging
+  useEffect(() => {
+    const user = chatService.getCurrentChatUser();
+    setCurrentUser(user || null);
+  }, []);
+
+
   useEffect(() => {
     const loadChatHistory = async () => {
       if (!open || isInitialized.current) return;
@@ -454,10 +462,21 @@ export default function AIChat() {
                     fontSize: 12,
                     opacity: 0.9,
                     display: "flex",
-                    gap: 4,
+                    flexDirection: "column",
+                    gap: 2,
                   }}
                 >
-                  <span style={{ color: "#4ade80" }}>●</span> Online
+                  <span>
+                    <span style={{ color: "#4ade80" }}>●</span> Online
+                  </span>
+                  {currentUser && (
+                    <span style={{ color: "#e0f2fe" }}>
+                      Đang chat cho:{" "}
+                      <strong>
+                        {currentUser.fullName || currentUser.email || "User"}
+                      </strong>
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -659,40 +678,9 @@ export default function AIChat() {
             >
               <ChatInput
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onPressEnter={(e) => {
-                  if (!e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                  }
-                }}
-                placeholder={
-                  serviceAvailable
-                    ? "Nhập tin nhắn..."
-                    : "AI service không khả dụng..."
-                }
+                onChange={setInput}
+                onSend={sendMessage}
                 disabled={!serviceAvailable || loadingHistory}
-                autoSize={{ minRows: 1, maxRows: 4 }}
-                style={{
-                  border: "none",
-                  background: "transparent",
-                  resize: "none",
-                  boxShadow: "none",
-                  padding: "6px 12px",
-                }}
-              />
-              <Button
-                type="primary"
-                shape="circle"
-                onClick={sendMessage}
-                disabled={!input.trim() || loading || !serviceAvailable}
-                loading={loading}
-                icon={!loading && <SendOutlined />}
-                style={{
-                  flexShrink: 0,
-                  background:
-                    input.trim() && serviceAvailable ? "#2563eb" : "#94a3b8",
-                }}
               />
             </div>
             <div

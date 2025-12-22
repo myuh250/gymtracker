@@ -22,7 +22,7 @@ class SearchResult:
 class VectorSearchService:
     """Semantic search service for RAG."""
     
-    MIN_SIMILARITY = 0.5  # Filter out irrelevant results
+    MIN_SIMILARITY = 0.7  # Filter out irrelevant results
     
     def __init__(self):
         self.embedding_service = get_embedding_service()

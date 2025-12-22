@@ -75,7 +75,7 @@ async def chat(
             tool_executor = get_tool_executor()
             tool_results = await tool_executor.execute_multiple(
                 tool_calls=tool_calls,
-                user_id=user_id or 1
+                user_id=user_id
             )
             
             # Synthesize with RAG + conversation history
