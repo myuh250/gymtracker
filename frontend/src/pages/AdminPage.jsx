@@ -1,6 +1,7 @@
 import React from "react";
 import { Layout, Typography } from "antd";
 import UserManagement from "../components/admin/UserManagement";
+import AdminNotification from "../components/admin/AdminNotification";
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -19,6 +20,7 @@ export default function AdminPage() {
         <Title level={2} style={{ marginBottom: 24 }}>
           Admin Dashboard
         </Title>
+        <AdminNotification />
         <UserManagement />
       </Content>
     </Layout>

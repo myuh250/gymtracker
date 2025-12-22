@@ -8,14 +8,14 @@
 -- ============================================
 -- 0. CLEAN UP EXISTING DATA (Optional - uncomment if needed)
 -- ============================================
--- SET FOREIGN_KEY_CHECKS = 0;
--- TRUNCATE TABLE exercise_sets;
--- TRUNCATE TABLE workout_logs;
--- TRUNCATE TABLE exercises;
--- TRUNCATE TABLE service_account_scopes;
--- TRUNCATE TABLE service_accounts;
--- TRUNCATE TABLE users;
--- SET FOREIGN_KEY_CHECKS = 1;
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE exercise_sets;
+TRUNCATE TABLE workout_logs;
+TRUNCATE TABLE exercises;
+TRUNCATE TABLE service_account_scopes;
+TRUNCATE TABLE service_accounts;
+TRUNCATE TABLE users;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
 -- 1. USERS DATA

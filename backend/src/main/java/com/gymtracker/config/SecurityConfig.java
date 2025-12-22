@@ -45,8 +45,7 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/api/service/token", "/api/public/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+                .requestMatchers("/api/auth/**", "/api/service/token", "/api/public/**", "/swagger-ui/**", "/v3/api-docs/**", "/ws/**").permitAll()
                 .requestMatchers("/internal/**").authenticated()  // Service endpoints
                 .anyRequest().authenticated()
             )
