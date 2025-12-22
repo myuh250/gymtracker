@@ -8,14 +8,14 @@
 -- ============================================
 -- 0. CLEAN UP EXISTING DATA (Optional - uncomment if needed)
 -- ============================================
--- SET FOREIGN_KEY_CHECKS = 0;
--- TRUNCATE TABLE exercise_sets;
--- TRUNCATE TABLE workout_logs;
--- TRUNCATE TABLE exercises;
--- TRUNCATE TABLE service_account_scopes;
--- TRUNCATE TABLE service_accounts;
--- TRUNCATE TABLE users;
--- SET FOREIGN_KEY_CHECKS = 1;
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE exercise_sets;
+TRUNCATE TABLE workout_logs;
+TRUNCATE TABLE exercises;
+TRUNCATE TABLE service_account_scopes;
+TRUNCATE TABLE service_accounts;
+TRUNCATE TABLE users;
+SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================
 -- 1. USERS DATA
@@ -24,8 +24,8 @@
 -- Note: In production, use proper password hashing through your service layer
 INSERT INTO users (email, password_hash, full_name, role, is_enabled, is_oauth, oauth_provider, oauth_id, avatar_url, created_at, updated_at) 
 VALUES 
-    ('admin@gymtracker.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Admin User', 'ROLE_ADMIN', true, false, NULL, NULL, NULL, NOW(), NOW()),
-    ('john.doe@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'John Doe', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=1', NOW(), NOW()),
+    ('admin@gymtracker.com', '$2a$12$vXgAaGxlB2V3jkpit60wZ.kWPqmf.Aqv3.JcrvS.BZbEmMHrSdOzq', 'Admin User', 'ROLE_ADMIN', true, false, NULL, NULL, NULL, NOW(), NOW()),
+    ('john.doe@example.com', '$2a$12$vXgAaGxlB2V3jkpit60wZ.kWPqmf.Aqv3.JcrvS.BZbEmMHrSdOzq', 'John Doe', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=1', NOW(), NOW()),
     ('jane.smith@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Jane Smith', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=2', NOW(), NOW()),
     ('mike.wilson@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Mike Wilson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=3', NOW(), NOW()),
     ('sarah.johnson@example.com', '$10$hAeUqnNa.E3JacK8YT8ia.bbqRWXvsPTdoG4YvYUeqRO5SjAb19qW', 'Sarah Johnson', 'ROLE_USER', true, false, NULL, NULL, 'https://i.pravatar.cc/150?img=4', NOW(), NOW()),
