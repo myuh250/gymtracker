@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Button, Input, Avatar, Typography, Tooltip, Spin, message as antdMessage } from "antd";
+import {
+  Button,
+  Input,
+  Avatar,
+  Typography,
+  Tooltip,
+  Spin,
+  message as antdMessage,
+} from "antd";
 import {
   MessageOutlined,
   RobotOutlined,
@@ -126,11 +134,10 @@ export default function AIChat() {
     setCurrentUser(user || null);
   }, []);
 
-
   useEffect(() => {
     const loadChatHistory = async () => {
       if (!open || isInitialized.current) return;
-      
+
       setLoadingHistory(true);
       try {
         // Check service health
@@ -153,7 +160,7 @@ export default function AIChat() {
         const sessionId = chatService.getCurrentSessionId();
         if (sessionId) {
           const history = await chatService.getChatHistory(20);
-          
+
           if (history.messages && history.messages.length > 0) {
             // Convert API format to component format
             const formattedMessages = history.messages.map((msg, idx) => ({
@@ -208,10 +215,10 @@ export default function AIChat() {
 
   const sendMessage = async () => {
     if (!input || !input.trim() || loading) return;
-    
+
     const text = input.trim();
     const userMsg = { id: Date.now(), sender: "user", text, time: new Date() };
-    
+
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setLoading(true);
@@ -220,20 +227,20 @@ export default function AIChat() {
     try {
       // Call LLM service
       const response = await chatService.sendMessage(text);
-      
+
       const botMsg = {
         id: Date.now() + 1,
         sender: "bot",
         text: response.response,
         time: new Date(),
       };
-      
+
       setMessages((prev) => [...prev, botMsg]);
       setServiceAvailable(true);
     } catch (err) {
       console.error("Send message error:", err);
       setError(err.message);
-      
+
       const errorMsg = {
         id: Date.now() + 1,
         sender: "system",
@@ -241,7 +248,7 @@ export default function AIChat() {
         time: new Date(),
         isError: true,
       };
-      
+
       setMessages((prev) => [...prev, errorMsg]);
       setServiceAvailable(false);
     } finally {
@@ -251,7 +258,9 @@ export default function AIChat() {
 
   const retryLastMessage = async () => {
     // Find last user message
-    const lastUserMessage = [...messages].reverse().find(msg => msg.sender === "user");
+    const lastUserMessage = [...messages]
+      .reverse()
+      .find((msg) => msg.sender === "user");
     if (!lastUserMessage) return;
 
     setInput(lastUserMessage.text);
@@ -261,7 +270,7 @@ export default function AIChat() {
   const handleReconnect = async () => {
     setLoadingHistory(true);
     setError(null);
-    
+
     try {
       // Check service health
       const isHealthy = await chatService.checkLLMHealth();
@@ -270,12 +279,12 @@ export default function AIChat() {
       if (isHealthy) {
         // Reset and reload
         isInitialized.current = false;
-        
+
         // Load session history
         const sessionId = chatService.getCurrentSessionId();
         if (sessionId) {
           const history = await chatService.getChatHistory(20);
-          
+
           if (history.messages && history.messages.length > 0) {
             const formattedMessages = history.messages.map((msg, idx) => ({
               id: Date.now() + idx,
@@ -304,7 +313,7 @@ export default function AIChat() {
             },
           ]);
         }
-        
+
         isInitialized.current = true;
         antdMessage.success("Đã kết nối lại thành công!");
       } else {
@@ -316,7 +325,9 @@ export default function AIChat() {
             time: new Date(),
           },
         ]);
-        antdMessage.error("Vẫn chưa kết nối được. Hãy đảm bảo LLM service đang chạy.");
+        antdMessage.error(
+          "Vẫn chưa kết nối được. Hãy đảm bảo LLM service đang chạy."
+        );
       }
     } catch (err) {
       console.error("Reconnect failed:", err);
@@ -338,10 +349,10 @@ export default function AIChat() {
   const handleClearChat = async () => {
     try {
       setLoading(true);
-      
+
       // Delete session on backend
       await chatService.deleteSession();
-      
+
       // Clear local messages and show welcome message
       setMessages([
         {
@@ -351,13 +362,13 @@ export default function AIChat() {
           time: new Date(),
         },
       ]);
-      
+
       setError(null);
       antdMessage.success("Đã xóa lịch sử chat thành công");
     } catch (err) {
       console.error("Clear chat error:", err);
       antdMessage.error("Không thể xóa lịch sử chat");
-      
+
       // Still clear local messages on error
       setMessages([
         {
@@ -522,7 +533,11 @@ export default function AIChat() {
             ) : (
               <>
                 <div
-                  style={{ textAlign: "center", fontSize: 12, color: "#94a3b8" }}
+                  style={{
+                    textAlign: "center",
+                    fontSize: 12,
+                    color: "#94a3b8",
+                  }}
                 >
                   Hôm nay, {new Date().toLocaleTimeString().slice(0, 5)}
                 </div>
@@ -537,7 +552,8 @@ export default function AIChat() {
                       key={msg.id}
                       style={{
                         display: "flex",
-                        justifyContent: isBot || isSystem ? "flex-start" : "flex-end",
+                        justifyContent:
+                          isBot || isSystem ? "flex-start" : "flex-end",
                         alignItems: "flex-end",
                         gap: 8,
                       }}
@@ -545,7 +561,9 @@ export default function AIChat() {
                       {(isBot || isSystem) && (
                         <Avatar
                           size="small"
-                          icon={isError ? <WarningOutlined /> : <RobotOutlined />}
+                          icon={
+                            isError ? <WarningOutlined /> : <RobotOutlined />
+                          }
                           style={{
                             backgroundColor: isError ? "#fee2e2" : "#e0e7ff",
                             color: isError ? "#dc2626" : "#2563eb",
@@ -556,9 +574,10 @@ export default function AIChat() {
                         style={{
                           maxWidth: "75%",
                           padding: "12px 16px",
-                          borderRadius: isBot || isSystem
-                            ? "16px 16px 16px 4px"
-                            : "16px 16px 4px 16px",
+                          borderRadius:
+                            isBot || isSystem
+                              ? "16px 16px 16px 4px"
+                              : "16px 16px 4px 16px",
                           background: isSystem
                             ? isError
                               ? "#fef2f2"
@@ -567,9 +586,10 @@ export default function AIChat() {
                             ? "#ffffff"
                             : "linear-gradient(135deg, #3b82f6, #2563eb)",
                           color: isBot || isSystem ? "#334155" : "#ffffff",
-                          boxShadow: isBot || isSystem
-                            ? "0 2px 8px rgba(0,0,0,0.05)"
-                            : "0 4px 12px rgba(37, 99, 235, 0.2)",
+                          boxShadow:
+                            isBot || isSystem
+                              ? "0 2px 8px rgba(0,0,0,0.05)"
+                              : "0 4px 12px rgba(37, 99, 235, 0.2)",
                           fontSize: 14,
                           lineHeight: 1.5,
                           wordBreak: "break-word",
@@ -578,9 +598,7 @@ export default function AIChat() {
                       >
                         {isBot ? (
                           <div className="markdown-content">
-                            <ReactMarkdown>
-                              {msg.text}
-                            </ReactMarkdown>
+                            <ReactMarkdown>{msg.text}</ReactMarkdown>
                           </div>
                         ) : (
                           msg.text
@@ -590,7 +608,10 @@ export default function AIChat() {
                         <Avatar
                           size="small"
                           icon={<UserOutlined />}
-                          style={{ backgroundColor: "#dbeafe", color: "#3b82f6" }}
+                          style={{
+                            backgroundColor: "#dbeafe",
+                            color: "#3b82f6",
+                          }}
                         />
                       )}
                     </div>
@@ -691,7 +712,8 @@ export default function AIChat() {
                 marginTop: 6,
               }}
             >
-              Powered by GymPro Tech • {serviceAvailable ? "🟢 Online" : "🔴 Offline"}
+              Powered by GymPro Tech •{" "}
+              {serviceAvailable ? "🟢 Online" : "🔴 Offline"}
             </div>
           </div>
         </div>
