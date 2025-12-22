@@ -2,6 +2,7 @@
 .cursor/*
 .vscode/*
 docs/backend/docker-compose.yml
+backend/uploads/
 docs/
 .env.docker
 node_modules/
