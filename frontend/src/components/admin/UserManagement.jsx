@@ -11,6 +11,7 @@ import {
 } from "../../services/adminService";
 import UserProfileModal from "./UserProfileModal";
 import UserFormModal from "./UserFormModal";
+import ResetPasswordModal from "./ResetPasswordModal";
 import { getUserTableColumns } from "./UserTableColumns";
 
 export default function UserManagement() {
@@ -21,6 +22,7 @@ export default function UserManagement() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [formMode, setFormMode] = useState("create");
   const [searchText, setSearchText] = useState("");
+  const [resetPasswordUser, setResetPasswordUser] = useState(null);
 
   useEffect(() => {
     loadUsers();
@@ -106,6 +108,32 @@ export default function UserManagement() {
     }
   };
 
+  const handleResetPassword = async (userId) => {
+    try {
+      const user = await getUserById(userId);
+      setResetPasswordUser(user);
+    } catch (error) {
+      message.error("Không thể tải thông tin user: " + error.message);
+    }
+  };
+
+  const handleResetPasswordSubmit = async (newPassword) => {
+    try {
+      // Need to send all required fields for UserRequest validation
+      await updateUserAPI(resetPasswordUser.id, {
+        email: resetPasswordUser.email,
+        fullName: resetPasswordUser.fullName,
+        role: resetPasswordUser.role,
+        isEnabled: resetPasswordUser.isEnabled,
+        password: newPassword,
+      });
+      message.success("Đã đổi mật khẩu thành công!");
+      setResetPasswordUser(null);
+    } catch (error) {
+      message.error("Không thể đổi mật khẩu: " + error.message);
+    }
+  };
+
   const filteredUsers = users.filter(
     (user) =>
       user.email.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -117,6 +145,7 @@ export default function UserManagement() {
     onBlockUser: handleBlockUser,
     onEditUser: handleEditUser,
     onDeleteUser: handleDeleteUser,
+    onResetPassword: handleResetPassword,
   });
 
   return (
@@ -169,6 +198,13 @@ export default function UserManagement() {
         onClose={handleFormClose}
         onSubmit={handleFormSubmit}
         mode={formMode}
+      />
+
+      <ResetPasswordModal
+        user={resetPasswordUser}
+        open={!!resetPasswordUser}
+        onClose={() => setResetPasswordUser(null)}
+        onSubmit={handleResetPasswordSubmit}
       />
     </div>
   );
