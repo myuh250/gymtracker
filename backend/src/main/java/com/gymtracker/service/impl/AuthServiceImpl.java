@@ -6,9 +6,11 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.gymtracker.dto.req.ForgotPasswordRequest;
 import com.gymtracker.dto.req.LoginRequest;
 import com.gymtracker.dto.req.RegisterRequest;
 import com.gymtracker.dto.res.AuthResponse;
+import com.gymtracker.dto.res.ForgotPasswordResponse;
 import com.gymtracker.entity.User;
 import com.gymtracker.enums.Role;
 import com.gymtracker.repository.UserRepository;
@@ -64,6 +66,16 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
+        // Check if user exists first
+        var user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại, vui lòng đăng ký"));
+
+        // Check if user is blocked
+        if (!user.getIsEnabled()) {
+            throw new RuntimeException("Tài khoản đã bị chặn. Vui lòng liên hệ với admin");
+        }
+
+        // Now authenticate
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -72,18 +84,8 @@ public class AuthServiceImpl implements AuthService {
                     )
             );
         } catch (org.springframework.security.authentication.BadCredentialsException e) {
-            throw new RuntimeException("Sai tài khoản hoặc mật khẩu");
+            throw new RuntimeException("Sai mật khẩu");
         } catch (org.springframework.security.authentication.DisabledException e) {
-            throw new RuntimeException("Tài khoản đã bị chặn. Vui lòng liên hệ với admin");
-        } catch (org.springframework.security.core.userdetails.UsernameNotFoundException e) {
-            throw new RuntimeException(e.getMessage());
-        }
-
-        var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
-
-        // Double check if user is enabled
-        if (!user.getIsEnabled()) {
             throw new RuntimeException("Tài khoản đã bị chặn. Vui lòng liên hệ với admin");
         }
 
@@ -103,4 +105,20 @@ public class AuthServiceImpl implements AuthService {
                 .role(user.getRole().name())
                 .build();
     }
+
+    @Override
+    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("Tài khoản không tồn tại"));
+
+        // Directly update password
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return ForgotPasswordResponse.builder()
+                .message("Đã đổi mật khẩu thành công")
+                .build();
+    }
+
+
 }
