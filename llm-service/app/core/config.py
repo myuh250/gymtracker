@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     
     # CORS settings - stored as string, parsed to list
     ALLOWED_ORIGINS_STR: str = Field(
-        default="http://localhost:5173,http://localhost:8080",
+        default="http://localhost:3000,http://localhost:5173,http://localhost:8080",
         description="Comma-separated list of allowed origins"
     )
     

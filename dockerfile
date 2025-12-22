@@ -113,6 +113,23 @@ server {
         proxy_read_timeout 60s;
     }
 
+    # OAuth2 endpoints (Spring Security)
+    location /oauth2/ {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /login/oauth2/ {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
     # LLM Service
     location /llm/ {
         rewrite ^/llm/(.*)$ /$1 break;
@@ -148,7 +165,7 @@ logfile=/app/logs/supervisord.log
 pidfile=/var/run/supervisord.pid
 
 [program:backend]
-command=java $JAVA_OPTS -jar /app/backend/app.jar
+command=/bin/sh -c "java $JAVA_OPTS -jar /app/backend/app.jar"
 directory=/app/backend
 autostart=true
 autorestart=true

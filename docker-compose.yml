@@ -1,14 +1,25 @@
-version: '3.8'
-
 services:
-  gym-tracker:
-    image: gym-tracker:latest
-    container_name: gym-tracker
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gymtracker-frontend
     restart: always
     ports:
-      - "80:80"        
+      - "5173:80"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gymtracker-backend
+    restart: always
+    ports:
+      - "8080:8080"
     env_file:
-      - .env.docker    
+      - .env.docker
     depends_on:
       mysql:
         condition: service_started
@@ -16,6 +27,23 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
+      llm-service:
+        condition: service_started
+
+  llm-service:
+    build:
+      context: ./llm-service
+      dockerfile: Dockerfile
+    container_name: gymtracker-llm-service
+    restart: always
+    ports:
+      - "8001:8001"
+    env_file:
+      - llm-service/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   mysql:
     image: mysql:8.0
     container_name: gymtracker-mysql
