@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +39,11 @@ public class WorkoutLogController {
         return ResponseEntity.ok(workoutLogService.getWorkoutHistory());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<WorkoutLogResponse> getWorkoutById(@PathVariable Long id) {
+        return ResponseEntity.ok(workoutLogService.getWorkoutById(id));
+    }
+
     @GetMapping("/date/{date}")
     public ResponseEntity<WorkoutLogResponse> getWorkoutLogByDate(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -49,5 +55,11 @@ public class WorkoutLogController {
             @PathVariable Long id,
             @Valid @RequestBody WorkoutLogRequest request) {
         return ResponseEntity.ok(workoutLogService.updateWorkoutLog(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteWorkoutLog(@PathVariable Long id) {
+        workoutLogService.deleteWorkoutLog(id);
+        return ResponseEntity.noContent().build();
     }
 }
