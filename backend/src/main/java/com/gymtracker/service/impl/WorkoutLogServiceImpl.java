@@ -80,6 +80,20 @@ public class WorkoutLogServiceImpl implements WorkoutLogService {
 
     @Override
     @Transactional(readOnly = true)
+    public WorkoutLogResponse getWorkoutById(Long id) {
+        User user = getCurrentUser();
+        WorkoutLog log = workoutLogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Workout log not found"));
+        
+        if (!log.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+        
+        return mapToResponse(log);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public WorkoutLogResponse getWorkoutLogByDate(java.time.LocalDate date) {
         User user = getCurrentUser();
         WorkoutLog log = workoutLogRepository.findByUserIdAndLogDate(user.getId(), date)
@@ -158,5 +172,23 @@ public class WorkoutLogServiceImpl implements WorkoutLogService {
         response.setNotes(set.getNotes());
         response.setRestTimeSeconds(set.getRestTimeSeconds());
         return response;
+    }
+
+    @Override
+    @Transactional
+    public void deleteWorkoutLog(Long id) {
+        User user = getCurrentUser();
+        WorkoutLog log = workoutLogRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Workout log not found"));
+
+        if (!log.getUser().getId().equals(user.getId())) {
+            throw new RuntimeException("Unauthorized");
+        }
+
+        // Delete associated exercise sets first (cascade should handle this, but explicit for clarity)
+        exerciseSetRepository.deleteByWorkoutLogId(id);
+        
+        // Delete the workout log
+        workoutLogRepository.delete(log);
     }
 }
