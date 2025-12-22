@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import { Form, Input, Button, Card, Divider, Typography, message } from "antd";
 import { GoogleOutlined, UserOutlined, LockOutlined } from "@ant-design/icons";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { login as loginAPI } from "../services/authService";
 
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
 
+  // Xử lý đăng nhập Google (Giữ nguyên logic mock của bạn)
   const handleGoogleLogin = () => {
     setLoading(true);
     message.loading({ content: "Đang kết nối tới Google...", key: "auth" });
@@ -21,8 +25,7 @@ export default function LoginPage() {
         role: "USER",
       };
 
-      localStorage.setItem("mockAccessToken", mockResponse.token);
-      localStorage.setItem("user", JSON.stringify(mockResponse)); // Lưu info user
+      login(mockResponse, mockResponse.token);
 
       message.success({ content: "Đăng nhập Google thành công!", key: "auth" });
       setLoading(false);
@@ -30,25 +33,36 @@ export default function LoginPage() {
     }, 1500);
   };
 
-  const onFinish = (values) => {
-    console.log("Form values:", values);
+  const onFinish = async (values) => {
     setLoading(true);
 
-    setTimeout(() => {
-      const mockResponse = {
-        token: "standard_token_abc_456",
-        email: "user@example.com",
-        fullName: "test",
-        role: "USER",
-      };
+    try {
+      // Call real API - Backend expects { email, password }
+      const response = await loginAPI({
+        email: values.email,
+        password: values.password,
+      });
 
-      localStorage.setItem("mockAccessToken", mockResponse.token);
-      localStorage.setItem("user", JSON.stringify(mockResponse));
+      // Backend returns: { token, email, fullName, role }
+      const { token, email, fullName, role } = response;
 
-      message.success(`Xin chào, ${mockResponse.fullName}!`);
-      setLoading(false);
+      // Create user object for AuthContext
+      const user = { email, fullName, role };
+
+      // Save to localStorage and AuthContext
+      localStorage.setItem("accessToken", token);
+      login(user, token);
+
+      message.success(`Xin chào, ${fullName}!`);
       navigate("/");
-    }, 1000);
+    } catch (error) {
+      console.error("Login error:", error);
+      const errorMsg =
+        error.response?.data?.message || error.message || "Đăng nhập thất bại";
+      message.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

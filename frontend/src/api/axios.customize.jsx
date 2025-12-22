@@ -21,7 +21,7 @@ const apiClient = axios.create({
 
 export const llmClient = axios.create({
   baseURL: LLM_SERVICE_BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
   withCredentials: false, // No cookies for microservice
   timeout: 180000, // 3 min for AI operations
 });

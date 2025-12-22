@@ -1,15 +1,12 @@
 import React from "react";
-import { Card, Tag, Table, message } from "antd";
+import { Card, Tag, Table, message, Checkbox } from "antd";
 
 const WorkoutExerciseCard = React.memo(
-  ({
-    exerciseId,
-    exerciseName,
-    sets,
-    isCompleted,
-    workoutId,
-    onToggleComplete,
-  }) => {
+  ({ exerciseId, exerciseName, sets, workoutId, onToggleSetComplete }) => {
+    const completedCount = sets.filter((s) => s.isCompleted).length;
+    const totalSets = sets.length;
+    const allCompleted = completedCount === totalSets;
+
     return (
       <Card
         key={exerciseId}
@@ -23,36 +20,17 @@ const WorkoutExerciseCard = React.memo(
             }}
           >
             <span>{exerciseName}</span>
-            <Tag
-              color={isCompleted ? "success" : "default"}
-              style={{
-                cursor: "pointer",
-                fontSize: 14,
-                padding: "4px 12px",
-              }}
-            >
-              {isCompleted ? "✓" : "○"}
+            <Tag color={allCompleted ? "success" : "processing"}>
+              {completedCount}/{totalSets} sets
             </Tag>
           </div>
         }
         type="inner"
         styles={{ body: { padding: 0 } }}
-        style={{ cursor: "pointer" }}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (onToggleComplete) {
-            onToggleComplete(workoutId, exerciseId);
-            message.success(
-              isCompleted
-                ? `Đã bỏ đánh dấu hoàn thành "${exerciseName}"`
-                : `Đã hoàn thành bài tập "${exerciseName}"!`
-            );
-          }
-        }}
       >
         <Table
           dataSource={sets}
-          rowKey="setNumber"
+          rowKey={(record) => record.id || record.setNumber}
           pagination={false}
           size="small"
           columns={[
@@ -66,16 +44,58 @@ const WorkoutExerciseCard = React.memo(
             {
               title: "Kg",
               dataIndex: "weight",
-              width: 100,
+              width: 80,
               render: (val) => <b>{val} kg</b>,
             },
             {
               title: "Reps",
               dataIndex: "reps",
+              width: 80,
               render: (val) => `${val} reps`,
+            },
+            {
+              title: "Rest",
+              dataIndex: "restTimeSeconds",
+              width: 70,
+              render: (val) => (val ? `${val}s` : "-"),
+            },
+            {
+              title: "Done",
+              dataIndex: "isCompleted",
+              width: 70,
+              align: "center",
+              render: (isCompleted, record) => (
+                <Checkbox
+                  checked={isCompleted}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    if (onToggleSetComplete) {
+                      onToggleSetComplete(workoutId, record.id);
+                      message.success(
+                        isCompleted
+                          ? `Bỏ đánh dấu Set ${record.setNumber}`
+                          : `Hoàn thành Set ${record.setNumber}!`
+                      );
+                    }
+                  }}
+                />
+              ),
             },
           ]}
         />
+        {sets.some((s) => s.notes) && (
+          <div
+            style={{ padding: "8px 12px", background: "#fafafa", fontSize: 12 }}
+          >
+            {sets
+              .filter((s) => s.notes)
+              .map((s) => (
+                <div key={s.id || s.setNumber}>
+                  <Tag size="small">Set {s.setNumber}</Tag> {s.notes}
+                </div>
+              ))}
+          </div>
+        )}
       </Card>
     );
   }

@@ -9,6 +9,7 @@ export default function ExerciseFormModal({
   onCancel,
   onSubmit,
   initialValues,
+  loading = false,
 }) {
   const [form] = Form.useForm();
   const [fileList, setFileList] = useState([]);
@@ -106,8 +107,10 @@ export default function ExerciseFormModal({
             marginTop: 20,
           }}
         >
-          <Button onClick={onCancel}>Hủy</Button>
-          <Button type="primary" htmlType="submit">
+          <Button onClick={onCancel} disabled={loading}>
+            Hủy
+          </Button>
+          <Button type="primary" htmlType="submit" loading={loading}>
             {initialValues ? "Lưu" : "Tạo mới"}
           </Button>
         </div>

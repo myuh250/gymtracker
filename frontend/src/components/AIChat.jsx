@@ -4,7 +4,6 @@ import {
   MessageOutlined,
   RobotOutlined,
   CloseOutlined,
-  SendOutlined,
   DeleteOutlined,
   UserOutlined,
   WarningOutlined,
@@ -491,9 +490,6 @@ export default function AIChat() {
               padding: "20px 16px",
               overflowY: "auto",
               background: "#f8fafc",
-              display: "flex",
-              flexDirection: "column",
-              gap: 16,
             }}
           >
             {loadingHistory ? (
@@ -659,12 +655,9 @@ export default function AIChat() {
                 padding: 8,
                 borderRadius: 24,
                 border: "1px solid #e2e8f0",
-                transition: "border 0.2s",
               }}
-              onFocus={(e) => (e.currentTarget.style.borderColor = "#3b82f6")}
-              onBlur={(e) => (e.currentTarget.style.borderColor = "#e2e8f0")}
             >
-              <Input.TextArea
+              <ChatInput
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onPressEnter={(e) => {
