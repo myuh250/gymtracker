@@ -9,4 +9,9 @@ const sendNotification = async (message) => {
     return response.data;
 };
 
-export { sendNotification };
+const getNotifications = async () => {
+    const response = await apiClient.get("/api/notifications");
+    return response.data;
+};
+
+export { sendNotification, getNotifications };

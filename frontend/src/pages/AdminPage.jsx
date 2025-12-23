@@ -138,6 +138,7 @@ export default function AdminPage() {
           <Title level={2} style={{ marginBottom: 24 }}>
             Admin Dashboard
           </Title>
+          <AdminNotification />
           <Suspense
             fallback={
               <Spin
