@@ -15,7 +15,8 @@ export default function LoginPage() {
   const handleGoogleLogin = () => {
     setLoading(true);
     message.loading({ content: "Đang chuyển đến Google...", key: "auth" });
-    const baseUrl = import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8080";
+    const baseUrl =
+      import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8080";
     // Spring Security default entry point for OAuth2 login
     window.location.href = `${baseUrl}/oauth2/authorization/google`;
   };
@@ -30,11 +31,11 @@ export default function LoginPage() {
         password: values.password,
       });
 
-      // Backend returns: { token, email, fullName, role, userId }
-      const { token, email, fullName, role, userId } = response;
+      // Backend returns: { token, email, fullName, role, userId, avatarUrl }
+      const { token, email, fullName, role, userId, avatarUrl } = response;
 
-      // Create user object for AuthContext (include userId for RAG/AIChat)
-      const user = { id: userId, email, fullName, role };
+      // Create user object for AuthContext (include userId for RAG/AIChat and avatarUrl)
+      const user = { userId, email, fullName, role, avatarUrl };
 
       // Save to localStorage and AuthContext
       localStorage.setItem("accessToken", token);

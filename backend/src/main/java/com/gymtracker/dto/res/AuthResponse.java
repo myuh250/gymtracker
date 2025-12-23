@@ -15,4 +15,5 @@ public class AuthResponse {
     private String email;
     private String fullName;
     private String role;
+    private String avatarUrl;  // Avatar URL from OAuth2 provider or custom upload
 }
