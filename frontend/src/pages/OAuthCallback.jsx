@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { message, Spin } from "antd";
 import { useAuth } from "../contexts/AuthContext";
+import apiClient from "../api/axios.customize";
 
 const parseJwt = (token) => {
   try {
@@ -22,41 +23,52 @@ export default function OAuthCallback() {
     if (processedRef.current) return;
     processedRef.current = true;
 
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    const userId = params.get("userId");
+    const handleOAuthCallback = async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token");
+        const userId = params.get("userId");
 
-    if (!token) {
-      message.error("Không nhận được token từ Google");
-      navigate("/login", { replace: true });
-      return;
-    }
+        if (!token || !userId) {
+          message.error("Không nhận được thông tin từ Google");
+          navigate("/login", { replace: true });
+          return;
+        }
 
-    // Dọn rác cũ trong localStorage từ luồng mock
-    ["mockAccessToken", "exercises", "botpress-webchat"].forEach((k) =>
-      localStorage.removeItem(k)
-    );
+        // Clean up old localStorage items
+        ["mockAccessToken", "exercises", "botpress-webchat"].forEach((k) =>
+          localStorage.removeItem(k)
+        );
 
-    // Decode JWT để lấy email/role nếu có
-    const payload = parseJwt(token);
-    const derivedEmail = payload?.sub || payload?.email;
-    const derivedRole = payload?.role || "ROLE_USER";
-    const derivedName =
-      payload?.fullName || payload?.name || payload?.given_name || derivedEmail;
+        // Store token first so API calls can authenticate
+        localStorage.setItem("accessToken", token);
 
-    const user = {
-      id: userId ? Number(userId) : payload?.userId ?? null,
-      email: derivedEmail || "unknown",
-      fullName: derivedName || "User",
-      role: derivedRole,
+        // Fetch full user profile including avatarUrl
+        const response = await apiClient.get(`/api/users/${userId}`);
+        const userData = response.data;
+
+        // Build user object with avatar
+        const user = {
+          userId: userData.id,
+          email: userData.email,
+          fullName: userData.fullName,
+          role: userData.role,
+          avatarUrl: userData.avatarUrl, // Google avatar URL
+        };
+
+        // Use AuthContext login to save and redirect
+        login(user, token);
+
+        message.success("Đăng nhập Google thành công!");
+      } catch (error) {
+        console.error("OAuth callback error:", error);
+        message.error("Đăng nhập thất bại. Vui lòng thử lại");
+        localStorage.removeItem("accessToken");
+        navigate("/login", { replace: true });
+      }
     };
 
-    localStorage.setItem("accessToken", token);
-    login(user, token);
-
-    message.success("Đăng nhập Google thành công!");
-    // Dùng hard redirect để chắc chắn thoát khỏi /login và tải lại state SPA
-    window.location.replace("/");
+    handleOAuthCallback();
   }, [login, navigate]);
 
   return (
@@ -66,9 +78,14 @@ export default function OAuthCallback() {
         alignItems: "center",
         justifyContent: "center",
         minHeight: "100vh",
+        flexDirection: "column",
+        gap: 16,
       }}
     >
-      <Spin tip="Đang hoàn tất đăng nhập..." size="large" />
+      <Spin size="large" />
+      <div style={{ color: "#666", fontSize: 16 }}>
+        Đang hoàn tất đăng nhập...
+      </div>
     </div>
   );
 }
