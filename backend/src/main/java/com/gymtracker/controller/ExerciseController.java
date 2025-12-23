@@ -57,10 +57,4 @@ public class ExerciseController {
         exerciseService.deleteExercise(id);
         return ResponseEntity.noContent().build();
     }
-
-    @PostMapping("/upload-media")
-    public ResponseEntity<String> uploadMedia(@RequestParam("file") MultipartFile file) {
-        String fileUrl = fileStorageService.storeFile(file);
-        return ResponseEntity.ok(fileUrl);
-    }
 }
