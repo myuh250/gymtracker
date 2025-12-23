@@ -1,10 +1,11 @@
-import React, { useState, useMemo, useCallback } from "react";
-import { Input, Select, Typography, message, Empty, Tag } from "antd";
+import React, { useState, useMemo, useCallback, lazy, Suspense } from "react";
+import { Input, Select, Typography, message, Empty, Tag, Spin } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import ExerciseCard from "./ExerciseCard";
-import ExerciseFormModal from "./ExerciseFormModal";
 import ExerciseCreate from "./ExerciseCreate";
 import { uploadExerciseMedia } from "../services/fileUploadService";
+
+const ExerciseFormModal = lazy(() => import("./ExerciseFormModal"));
 
 const { Option } = Select;
 const { Title } = Typography;
@@ -177,13 +178,15 @@ export default function ExerciseList({
         )}
       </div>
 
-      <ExerciseFormModal
-        open={modalState.open}
-        initialValues={modalState.item}
-        onCancel={handleCloseModal}
-        onSubmit={handleSubmit}
-        loading={uploading}
-      />
+      <Suspense fallback={<Spin />}>
+        <ExerciseFormModal
+          open={modalState.open}
+          initialValues={modalState.item}
+          onCancel={handleCloseModal}
+          onSubmit={handleSubmit}
+          loading={uploading}
+        />
+      </Suspense>
     </div>
   );
 }

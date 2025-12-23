@@ -15,6 +15,7 @@ public class UserResponse {
     private Boolean isEnabled;
     private Boolean isOauth;
     private String oauthProvider;
+    private String avatarUrl;  // Avatar URL from OAuth2 or custom upload
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

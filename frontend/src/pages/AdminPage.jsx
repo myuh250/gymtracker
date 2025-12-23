@@ -1,5 +1,5 @@
-import React from "react";
-import { Layout, Typography, Menu, Button, Avatar, Tag } from "antd";
+import React, { lazy, Suspense } from "react";
+import { Layout, Typography, Menu, Button, Avatar, Tag, Spin } from "antd";
 import {
   ThunderboltOutlined,
   LogoutOutlined,
@@ -7,8 +7,9 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { useAuth } from "../contexts/AuthContext";
-import UserManagement from "../components/admin/UserManagement";
 import AdminNotification from "../components/admin/AdminNotification";
+
+const UserManagement = lazy(() => import("../components/admin/UserManagement"));
 
 const { Sider, Content } = Layout;
 const { Title, Text } = Typography;
@@ -137,7 +138,16 @@ export default function AdminPage() {
           <Title level={2} style={{ marginBottom: 24 }}>
             Admin Dashboard
           </Title>
-          <UserManagement />
+          <Suspense
+            fallback={
+              <Spin
+                size="large"
+                style={{ display: "block", margin: "50px auto" }}
+              />
+            }
+          >
+            <UserManagement />
+          </Suspense>
         </Content>
       </Layout>
     </Layout>

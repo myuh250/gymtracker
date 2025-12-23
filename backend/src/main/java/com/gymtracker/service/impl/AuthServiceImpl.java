@@ -61,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
 
@@ -103,6 +104,7 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .role(user.getRole().name())
+                .avatarUrl(user.getAvatarUrl())
                 .build();
     }
 

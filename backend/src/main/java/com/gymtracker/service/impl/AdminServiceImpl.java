@@ -126,6 +126,7 @@ public class AdminServiceImpl implements AdminService {
         response.setIsEnabled(user.getIsEnabled());
         response.setIsOauth(user.getIsOauth());
         response.setOauthProvider(user.getOauthProvider());
+        response.setAvatarUrl(user.getAvatarUrl());
         response.setCreatedAt(user.getCreatedAt());
         response.setUpdatedAt(user.getUpdatedAt());
         return response;

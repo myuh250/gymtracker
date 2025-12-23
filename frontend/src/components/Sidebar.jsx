@@ -104,8 +104,9 @@ export default function Sidebar({ user }) {
         >
           <Avatar
             size={40}
-            src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"
+            src={user?.avatarUrl}
             icon={<UserOutlined />}
+            style={{ objectFit: "cover" }}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text strong style={{ fontSize: 14, display: "block" }} ellipsis>

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Layout, Typography, Divider, message } from "antd";
-import WorkoutBuilder from "../components/WorkoutBuilder";
+import React, { useState, useEffect, lazy, Suspense } from "react";
+import { Layout, Typography, Divider, message, Spin } from "antd";
 import WorkoutList from "../components/WorkoutList";
 import {
   getExercises,
@@ -11,6 +10,8 @@ import {
   toggleWorkoutCompleted,
   toggleSetCompleted,
 } from "../utils/storage";
+
+const WorkoutBuilder = lazy(() => import("../components/WorkoutBuilder"));
 
 const { Content } = Layout;
 const { Title } = Typography;
@@ -130,13 +131,15 @@ export default function WorkoutPage() {
             Gym Tracker
           </Title>
           {/* Nút tạo nằm trong Component Builder */}
-          <WorkoutBuilder
-            exercises={exercises}
-            workouts={workouts}
-            onCreate={handleCreateWorkout}
-            editingWorkout={editingWorkout}
-            onCancelEdit={() => setEditingWorkout(null)}
-          />
+          <Suspense fallback={<Spin />}>
+            <WorkoutBuilder
+              exercises={exercises}
+              workouts={workouts}
+              onCreate={handleCreateWorkout}
+              editingWorkout={editingWorkout}
+              onCancelEdit={() => setEditingWorkout(null)}
+            />
+          </Suspense>
         </div>
 
         <Divider />

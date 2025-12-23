@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { Button, Space, message } from "antd";
+import React, { useState, lazy, Suspense } from "react";
+import { Button, Space, message, Spin } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import ExerciseFormModal from "./ExerciseFormModal";
 import { uploadExerciseMedia } from "../services/fileUploadService";
+
+const ExerciseFormModal = lazy(() => import("./ExerciseFormModal"));
 
 export default function ExerciseCreate({ onAdd }) {
   const [open, setOpen] = useState(false);
@@ -45,12 +46,14 @@ export default function ExerciseCreate({ onAdd }) {
         Thêm mới
       </Button>
 
-      <ExerciseFormModal
-        open={open}
-        onCancel={() => setOpen(false)}
-        onSubmit={handleSubmit}
-        loading={uploading}
-      />
+      <Suspense fallback={<Spin />}>
+        <ExerciseFormModal
+          open={open}
+          onCancel={() => setOpen(false)}
+          onSubmit={handleSubmit}
+          loading={uploading}
+        />
+      </Suspense>
     </Space>
   );
 }
