@@ -10,8 +10,8 @@ EXERCISE_SEARCH_TOOL = {
             },
             "muscle_group": {
                 "type": "string",
-                "description": "Optional muscle group filter (CHEST, BACK, LEGS, etc.)",
-                "enum": ["CHEST", "BACK", "LEGS", "SHOULDERS", "ARMS", "CORE"]
+                "description": "Optional muscle group filter. For arms, use BICEPS or TRICEPS.",
+                "enum": ["CHEST", "BACK", "LEGS", "SHOULDERS", "BICEPS", "TRICEPS", "CORE"]
             },
             "limit": {
                 "type": "integer",
@@ -24,13 +24,13 @@ EXERCISE_SEARCH_TOOL = {
 
 USER_WORKOUT_SEARCH_TOOL = {
     "name": "search_user_workouts",
-    "description": "Search user's past workout history and logs. Use this when user asks about their own workout history, progress, or past sessions.",
+    "description": "[RAG/Semantic Search] Search user's workout history by CONTENT and training patterns. USE THIS for: 'my chest workouts', 'leg sessions', 'workouts with squats', 'upper body training', 'sessions where I did deadlifts'. DO NOT use for specific date queries - use get_user_workout_history instead. This uses AI semantic search to understand exercise content and muscle groups.",
     "parameters": {
         "type": "object",
         "properties": {
             "query": {
                 "type": "string",
-                "description": "Search query (e.g., 'my chest workouts', 'leg day last week')"
+                "description": "Natural language search query about exercises, muscle groups, or training patterns (NOT dates)"
             },
             "limit": {
                 "type": "integer",
@@ -58,13 +58,13 @@ USER_STATS_TOOL = {
 
 GET_USER_WORKOUT_HISTORY_TOOL = {
     "name": "get_user_workout_history",
-    "description": "Get chronological list of user's workout dates and summaries. Use this when user asks 'what dates did I workout', 'list all my workouts', 'which days I trained', or wants to see all workout history.",
+    "description": "[Date-Based Query] Get user's workout history by date range. USE THIS for: 'did I workout on 23/12?', 'what did I train on [specific date]?', 'have I been to gym on [date]?', 'show my workouts this week/month', 'list all my recent workouts', 'workout history last 7 days'. Returns chronological list with dates, exercises, and volume. Perfect for date-specific questions and time-range queries.",
     "parameters": {
         "type": "object",
         "properties": {
             "days": {
                 "type": "integer",
-                "description": "Number of days to look back (default 30, max 180)"
+                "description": "Number of days to look back (default 30, max 180). For 'this week' use 7, 'this month' use 30, 'today' or 'yesterday' use 2-3 days"
             },
             "limit": {
                 "type": "integer",

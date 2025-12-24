@@ -34,6 +34,19 @@ public class InternalUserController {
     private WorkoutLogRagService workoutLogRagService;
 
     /**
+     * Get all user IDs in the system
+     * 
+     * @return List of all user IDs
+     * @scope RAG_READ or SERVICE_ADMIN
+     */
+    @GetMapping("/ids")
+    @PreAuthorize("hasAnyAuthority('SCOPE_rag:read', 'SCOPE_service:admin')")
+    public ResponseEntity<List<Long>> getAllUserIds() {
+        List<Long> userIds = workoutLogRagService.getAllUserIds();
+        return ResponseEntity.ok(userIds);
+    }
+
+    /**
      * Get workout history for a specific user with date range (for personalized RAG)
      * 
      * @param userId User ID

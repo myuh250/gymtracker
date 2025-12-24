@@ -18,6 +18,14 @@ import com.gymtracker.dto.res.WorkoutStatsResponse;
 public interface WorkoutLogRagService {
     
     /**
+     * Get all user IDs in the system
+     * 
+     * @return List of all user IDs
+     * @apiNote Used for syncing all users' workout data to RAG system
+     */
+    List<Long> getAllUserIds();
+    
+    /**
      * Get workout history for a specific user with date range (for personalized RAG)
      * 
      * @param userId User ID

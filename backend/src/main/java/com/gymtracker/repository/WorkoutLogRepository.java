@@ -86,6 +86,12 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, Long> {
     // ========== RAG Sync Methods ==========
     
     /**
+     * Get all distinct user IDs who have workout logs
+     */
+    @Query("SELECT DISTINCT wl.user.id FROM WorkoutLog wl ORDER BY wl.user.id")
+    List<Long> findAllDistinctUserIds();
+    
+    /**
      * Find workout logs for a specific user with date range (for personalized RAG)
      */
     @Query("SELECT wl FROM WorkoutLog wl WHERE wl.user.id = :userId " +

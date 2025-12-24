@@ -135,24 +135,38 @@ async def sync_all_workouts(days: int, stats: SyncStats) -> None:
     """
     Sync workout logs for ALL users in database.
     
-    Uses per-user endpoint to fetch workouts and manually inject userId.
-    This approach doesn't require userId in the backend response.
+    Dynamically fetches all user IDs from backend and syncs workouts for each.
     
     Args:
         days: Number of days of history to sync (default: 180)
         stats: Stats tracker
     """
-    # Hardcoded user IDs for development
-    USER_IDS = [1, 2, 3, 4, 5]
-    
     print("\n" + "=" * 70)
     print(f"💪 Syncing Workouts for ALL Users (last {days} days)")
     print("=" * 70)
-    print(f"Target users: {USER_IDS}")
     
     start_time = time.time()
     
     try:
+        # Step 0: Get all user IDs from backend
+        print("\n[0/3] Fetching user IDs from backend...", end=" ", flush=True)
+        
+        async with BackendAPIClient() as client:
+            try:
+                user_ids = await client.get_all_user_ids()
+                print(f"✓ Found {len(user_ids)} users")
+                
+                if not user_ids:
+                    print("⚠️  No users found in database")
+                    return
+                    
+                print(f"Target users: {user_ids}")
+                
+            except Exception as e:
+                print(f"✗ Error: {e}")
+                print("\n⚠️  Falling back to default user list [1, 2, 3, 4, 5]")
+                user_ids = [1, 2, 3, 4, 5]
+        
         # Step 1: Fetch workouts for each user
         print(f"\n[1/3] Fetching workouts from backend...")
         
@@ -163,7 +177,7 @@ async def sync_all_workouts(days: int, stats: SyncStats) -> None:
         successful_users = []
         
         async with BackendAPIClient() as client:
-            for user_id in USER_IDS:
+            for user_id in user_ids:
                 print(f"   User {user_id}...", end=" ", flush=True)
                 
                 try:

@@ -78,6 +78,24 @@ const createAuthRequestInterceptor =
 apiClient.interceptors.request.use(createAuthRequestInterceptor(true));
 llmClient.interceptors.request.use(createAuthRequestInterceptor(true));
 
+// Attach X-User-ID header for LLM requests based on localStorage user
+llmClient.interceptors.request.use((config) => {
+  try {
+    const rawUser = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (rawUser) {
+      const user = JSON.parse(rawUser);
+      const userId = user && (user.userId ?? user.id);
+      if (userId != null) {
+        config.headers = config.headers || {};
+        config.headers["X-User-ID"] = String(userId);
+      }
+    }
+  } catch (e) {
+    // bỏ qua lỗi parse, không chặn request
+  }
+  return config;
+});
+
 // ==============================================
 // Response Interceptors
 // ==============================================

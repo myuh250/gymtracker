@@ -39,8 +39,8 @@ const getCurrentUserFromStorage = () => {
 
 const getCurrentUserId = () => {
   const user = getCurrentUserFromStorage();
-  // Prefer backend user id when available; fall back to null instead of mock.
-  return user && user.id != null ? user.id : null;
+  // User object has 'userId' field (not 'id')
+  return user && user.userId != null ? user.userId : null;
 };
 
 const createChatHeaders = (sessionId) => {

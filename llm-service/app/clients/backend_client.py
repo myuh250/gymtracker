@@ -273,6 +273,19 @@ class BackendAPIClient:
             params=params
         )
     
+    async def get_all_user_ids(self) -> List[int]:
+        """
+        Get all user IDs from the backend.
+        
+        Endpoint: GET /internal/users/ids
+        Required scope: rag:read or service:admin
+        
+        Returns:
+            List of all user IDs
+        """
+        result = await self._request("GET", "/internal/users/ids")
+        return result if isinstance(result, list) else []
+    
     # ========== Health Check ==========
     
     async def health_check(self) -> bool:

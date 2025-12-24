@@ -1,8 +1,11 @@
 import logging
 from typing import Dict, Any, List
+from datetime import datetime, timedelta
+from sqlalchemy import select, func, desc
 
 from app.services.vector_search_service import get_vector_search_service
-from app.clients.backend_client import BackendAPIClient
+from app.db.database import AsyncSessionLocal
+from app.db.models import WorkoutLogEmbedding, ExerciseEmbedding
 
 logger = logging.getLogger(__name__)
 
@@ -81,12 +84,53 @@ class ToolExecutor:
         }
     
     async def _get_user_stats(self, args: Dict, user_id: int) -> Dict:
-        """Execute get_user_stats tool"""
-        async with BackendAPIClient() as client:
-            stats = await client.get_user_stats(
-                user_id=user_id,
-                days=args.get('days', 30)
+        """Execute get_user_stats tool - query PostgreSQL directly"""
+        days = args.get('days', 30)
+        cutoff_date = datetime.now().date() - timedelta(days=days)
+        
+        async with AsyncSessionLocal() as session:
+            # Get total workouts count
+            total_workouts_query = select(func.count(WorkoutLogEmbedding.id)).where(
+                WorkoutLogEmbedding.user_id == user_id,
+                WorkoutLogEmbedding.workout_date >= cutoff_date
             )
+            total_workouts_result = await session.execute(total_workouts_query)
+            total_workouts = total_workouts_result.scalar() or 0
+            
+            # Get total volume and duration
+            stats_query = select(
+                func.sum(WorkoutLogEmbedding.total_volume).label('total_volume'),
+                func.avg(WorkoutLogEmbedding.total_volume).label('avg_volume')
+            ).where(
+                WorkoutLogEmbedding.user_id == user_id,
+                WorkoutLogEmbedding.workout_date >= cutoff_date
+            )
+            stats_result = await session.execute(stats_query)
+            stats_row = stats_result.first()
+            
+            total_volume = float(stats_row.total_volume) if stats_row.total_volume else 0.0
+            avg_volume = float(stats_row.avg_volume) if stats_row.avg_volume else 0.0
+            
+            # Calculate average workouts per week
+            weeks = max(days / 7, 1)
+            avg_workouts_per_week = total_workouts / weeks if weeks > 0 else 0
+            
+            # Get recent workout dates for streak calculation
+            recent_workouts_query = select(WorkoutLogEmbedding.workout_date).where(
+                WorkoutLogEmbedding.user_id == user_id,
+                WorkoutLogEmbedding.workout_date >= cutoff_date
+            ).order_by(desc(WorkoutLogEmbedding.workout_date))
+            recent_result = await session.execute(recent_workouts_query)
+            workout_dates = [row[0] for row in recent_result.fetchall()]
+        
+        stats = {
+            "totalWorkouts": total_workouts,
+            "totalVolume": round(total_volume, 2),
+            "averageVolume": round(avg_volume, 2),
+            "averageWorkoutsPerWeek": round(avg_workouts_per_week, 2),
+            "periodDays": days,
+            "recentWorkoutDates": [date.isoformat() for date in workout_dates[:10]]  # Last 10 dates
+        }
         
         return {
             "tool": "get_user_stats",
@@ -94,20 +138,36 @@ class ToolExecutor:
         }
     
     async def _get_user_workout_history(self, args: Dict, user_id: int) -> Dict:
-        """Execute get_user_workout_history tool"""
-        from datetime import datetime, timedelta
+        """Execute get_user_workout_history tool - query PostgreSQL directly"""
         
         days = min(args.get('days', 30), 180)  # Cap at 180 days
         limit = min(args.get('limit', 20), 100)  # Cap at 100
         
-        start_date = datetime.now() - timedelta(days=days)
+        start_date = (datetime.now() - timedelta(days=days)).date()
         
-        async with BackendAPIClient() as client:
-            workouts = await client.get_user_workouts(
-                user_id=user_id,
-                start_date=start_date,
-                limit=limit
-            )
+        async with AsyncSessionLocal() as session:
+            # Query workout logs from PostgreSQL
+            query = select(WorkoutLogEmbedding).where(
+                WorkoutLogEmbedding.user_id == user_id,
+                WorkoutLogEmbedding.workout_date >= start_date
+            ).order_by(
+                desc(WorkoutLogEmbedding.workout_date)
+            ).limit(limit)
+            
+            result = await session.execute(query)
+            workout_logs = result.scalars().all()
+            
+            # Format workouts for response
+            workouts = []
+            for workout in workout_logs:
+                workouts.append({
+                    "workoutLogId": workout.workout_log_id,
+                    "workoutDate": workout.workout_date.isoformat(),
+                    "summaryText": workout.summary_text,
+                    "totalVolume": workout.total_volume,
+                    "exerciseCount": workout.exercise_count,
+                    "createdAt": workout.created_at.isoformat()
+                })
         
         return {
             "tool": "get_user_workout_history",

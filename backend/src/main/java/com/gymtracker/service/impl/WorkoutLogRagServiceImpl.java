@@ -37,6 +37,12 @@ public class WorkoutLogRagServiceImpl implements WorkoutLogRagService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Long> getAllUserIds() {
+        return workoutLogRepository.findAllDistinctUserIds();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<WorkoutLogResponse> getUserWorkoutHistory(Long userId, LocalDate startDate, LocalDate endDate, Integer limit) {
         // Set defaults
         if (endDate == null) {
