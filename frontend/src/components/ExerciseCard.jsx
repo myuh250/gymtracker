@@ -5,7 +5,20 @@ import { EditOutlined, DeleteOutlined, FireFilled } from "@ant-design/icons";
 const { Text } = Typography;
 
 const ExerciseCard = React.memo(
-  ({ item, isSelected, onSelect, onEdit, onDelete }) => {
+  ({
+    item,
+    isSelected,
+    onSelect,
+    onEdit,
+    onDelete,
+    currentUserId,
+    userRole,
+  }) => {
+    // Kiểm tra quyền: Admin có thể edit/delete tất cả, User chỉ được edit/delete bài tập custom của mình
+    const isAdmin = userRole === "ROLE_ADMIN";
+    const canModify =
+      isAdmin || (item.isCustom && item.createdByUserId === currentUserId);
+
     const getMuscleColor = (muscle) => {
       const colors = {
         Chest: "volcano",
@@ -135,48 +148,50 @@ const ExerciseCard = React.memo(
           </div>
         </div>
 
-        {/* Action Buttons: Ẩn/Hiện bằng CSS Class .item-actions */}
-        <div
-          className="item-actions"
-          style={{
-            position: "absolute",
-            top: 12,
-            right: 12,
-            display: "flex",
-            gap: 4,
-            background: isSelected ? "#eff6ff" : "#fff",
-            borderRadius: 20,
-            paddingLeft: 8,
-          }}
-        >
-          <Button
-            type="text"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={(e) => onEdit(item, e)}
-            style={{ color: "#64748b" }}
-          />
-          <Popconfirm
-            title="Xoá bài tập?"
-            onConfirm={(e) => {
-              e.stopPropagation();
-              onDelete(item.id);
+        {/* Action Buttons: Chỉ hiện khi có quyền */}
+        {canModify && (
+          <div
+            className="item-actions"
+            style={{
+              position: "absolute",
+              top: 12,
+              right: 12,
+              display: "flex",
+              gap: 4,
+              background: isSelected ? "#eff6ff" : "#fff",
+              borderRadius: 20,
+              paddingLeft: 8,
             }}
-            onCancel={(e) => e.stopPropagation()}
-            okText="Xoá"
-            cancelText="Hủy"
-            okButtonProps={{ danger: true, type: "primary" }}
-            placement="left"
           >
             <Button
               type="text"
               size="small"
-              danger
-              icon={<DeleteOutlined />}
-              onClick={(e) => e.stopPropagation()}
+              icon={<EditOutlined />}
+              onClick={(e) => onEdit(item, e)}
+              style={{ color: "#64748b" }}
             />
-          </Popconfirm>
-        </div>
+            <Popconfirm
+              title="Xoá bài tập?"
+              onConfirm={(e) => {
+                e.stopPropagation();
+                onDelete(item.id);
+              }}
+              onCancel={(e) => e.stopPropagation()}
+              okText="Xoá"
+              cancelText="Hủy"
+              okButtonProps={{ danger: true, type: "primary" }}
+              placement="left"
+            >
+              <Button
+                type="text"
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </Popconfirm>
+          </div>
+        )}
       </div>
     );
   }

@@ -31,6 +31,11 @@ export default function ExerciseList({
   const [uploading, setUploading] = useState(false);
   const [modalState, setModalState] = useState({ open: false, item: null });
 
+  // Lấy thông tin user để kiểm tra quyền
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUserId = user?.userId;
+  const userRole = user?.role;
+
   // Tối ưu filter bằng useMemo
   const listHienThi = useMemo(() => {
     return data.filter((item) => {
@@ -173,6 +178,8 @@ export default function ExerciseList({
               onSelect={onSelect}
               onEdit={handleOpenEdit}
               onDelete={onDelete}
+              currentUserId={currentUserId}
+              userRole={userRole}
             />
           ))
         )}
