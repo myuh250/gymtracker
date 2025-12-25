@@ -58,7 +58,11 @@ public class ExerciseServiceImpl implements ExerciseService {
         Exercise exercise = exerciseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Exercise not found"));
 
-        if (!exercise.getIsCustom() || !exercise.getCreatedByUserId().equals(user.getId())) {
+        // Admin có thể edit mọi bài tập, User chỉ edit bài tập custom của mình
+        boolean isAdmin = user.getRole().name().equals("ROLE_ADMIN");
+        boolean canEdit = isAdmin || (exercise.getIsCustom() && exercise.getCreatedByUserId().equals(user.getId()));
+        
+        if (!canEdit) {
             throw new RuntimeException("You can only edit your own custom exercises");
         }
 
@@ -77,7 +81,11 @@ public class ExerciseServiceImpl implements ExerciseService {
         Exercise exercise = exerciseRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Exercise not found"));
 
-        if (!exercise.getIsCustom() || !exercise.getCreatedByUserId().equals(user.getId())) {
+        // Admin có thể delete mọi bài tập, User chỉ delete bài tập custom của mình
+        boolean isAdmin = user.getRole().name().equals("ROLE_ADMIN");
+        boolean canDelete = isAdmin || (exercise.getIsCustom() && exercise.getCreatedByUserId().equals(user.getId()));
+        
+        if (!canDelete) {
             throw new RuntimeException("You can only delete your own custom exercises");
         }
 
